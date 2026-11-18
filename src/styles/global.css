@@ -1,0 +1,30 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: var(--font-sans); font-size: var(--fs-base); line-height: var(--lh-base); color: var(--c-text); background: var(--c-bg); }
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4, p { margin: 0; }
+:focus-visible { outline: 3px solid var(--c-brand-soft); outline-offset: 2px; }
+
+.container { width: min(100% - 2 * var(--sp-3), var(--container)); margin-inline: auto; }
+.section { padding-block: var(--sp-5); }
+.section--white { background: var(--c-surface); }
+
+.section-title { font-size: var(--fs-2xl); line-height: var(--lh-2xl); font-weight: 700; }
+.section-title--green { color: var(--c-brand); }
+.section-subtitle { margin-top: var(--sp-1); font-size: var(--fs-base); line-height: var(--lh-base); }
+.center { text-align: center; }
+
+/* Judul dengan garis kiri hijau (UMKM, Berita) */
+.section-head { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; justify-content: space-between; margin-bottom: var(--sp-4); }
+.section-head__text { border-left: 4px solid var(--c-brand-dark); padding-left: var(--sp-2); }
+.section-head__text h2 { font-size: var(--fs-xl); line-height: var(--lh-xl); font-weight: 700; color: var(--c-brand); }
+
+.btn { display: inline-flex; align-items: center; gap: var(--sp-1); padding: 8px var(--sp-3); border: 0; border-radius: var(--radius-sm); font: 700 var(--fs-base)/var(--lh-base) var(--font-sans); color: #fff; background: var(--c-brand); box-shadow: var(--shadow-card); cursor: pointer; transition: background .2s; }
+.btn:hover { background: var(--c-brand-dark); }
+.btn--sm { padding: 4px var(--sp-2); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+
+.state-msg { padding: var(--sp-3); text-align: center; color: var(--c-muted); }
+.skeleton { background: linear-gradient(90deg, var(--neutral-200), var(--neutral-100), var(--neutral-200)); border-radius: var(--radius-md); min-height: 120px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
