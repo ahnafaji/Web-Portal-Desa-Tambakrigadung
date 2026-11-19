@@ -1,4 +1,3 @@
-// Satu-satunya tempat yang bicara dengan backend. Komponen tidak boleh memanggil fetch langsung.
 import * as mock from "../data/mock.js";
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== "false";
@@ -22,6 +21,7 @@ export const api = {
   getProfil: get("/profil", mock.profil),
   getSambutan: get("/sambutan", mock.sambutan),
   getPotensi: get("/potensi?limit=3", mock.potensi),
+  getPotensiPage: get("/potensi/halaman", mock.potensiPage),
   getApbd: get("/apbd", mock.apbd),
   getUmkm: get("/umkm?limit=3", mock.umkm),
   getBerita: get("/berita?limit=3", mock.berita),

@@ -1,0 +1,87 @@
+/* ===== Halaman Potensi Desa ===== */
+.page { padding-top: calc(var(--nav-h) + var(--sp-3)); padding-bottom: var(--sp-5); }
+
+.img-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-1); width: 100%; height: 100%; min-height: 220px; background: var(--neutral-200); color: var(--neutral-400); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+
+/* --- pill / badge --- */
+.pill { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 2px var(--sp-2); border-radius: var(--radius-pill); font-size: var(--fs-xs); line-height: var(--lh-xs); font-weight: 700; }
+.pill--green { background: var(--secondary-200); color: var(--secondary-500); }
+.pill--glass { background: rgba(255, 255, 255, 0.2); color: #fff; }
+
+/* --- header --- */
+.breadcrumb { display: flex; align-items: center; gap: 6px; margin-bottom: var(--sp-1); font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+.breadcrumb a { display: inline-flex; align-items: center; gap: 4px; }
+.breadcrumb a:hover { color: var(--c-brand); text-decoration: underline; }
+.potensi-head__top { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: flex-start; justify-content: space-between; }
+.potensi-head__top > div:first-child { flex: 1 1 420px; max-width: 700px; }
+.potensi-head__title { margin: var(--sp-1) 0; color: var(--c-text); }
+.potensi-head__desc { color: var(--c-muted); }
+.bidang-card { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+.bidang-card__icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--secondary-200); color: var(--secondary-500); }
+.bidang-card__num { margin: 0; color: var(--c-brand-dark); }
+.bidang-card__label { font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+
+/* --- filter chips --- */
+.chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin: var(--sp-3) 0 var(--sp-4); }
+.chip { padding: 4px var(--sp-3); border: 0; border-radius: var(--radius-pill); background: #fff; color: var(--c-text); font: 700 var(--fs-xs)/var(--lh-xs) var(--font-sans); cursor: pointer; transition: background .2s, color .2s; }
+.chip:hover { background: var(--secondary-100); }
+.chip.is-active { background: var(--c-brand); color: #fff; }
+
+/* --- kartu potensi --- */
+.potensi-list { display: grid; gap: var(--sp-4); }
+.potensi-card { display: grid; gap: var(--sp-4); padding: var(--sp-3); background: #fff; border-radius: var(--radius-md); box-shadow: 0 1px 4px rgba(43, 40, 37, 0.1); }
+.potensi-card__media { position: relative; overflow: hidden; align-self: center; aspect-ratio: 16 / 11; border-radius: var(--radius-md); background: var(--neutral-200); }
+.potensi-card__media img { width: 100%; height: 100%; object-fit: cover; }
+.media-badge { position: absolute; top: var(--sp-2); left: var(--sp-2); display: inline-flex; align-items: center; gap: 6px; padding: 2px var(--sp-2); border-radius: var(--radius-pill); background: var(--c-brand-dark); color: #fff; font-size: var(--fs-xs); line-height: var(--lh-xs); font-weight: 700; }
+.potensi-card__loc { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+.potensi-card__body { display: flex; flex-direction: column; gap: var(--sp-2); justify-content: center; }
+.potensi-card__body h2 { color: var(--c-text); }
+.potensi-card__text { color: var(--c-muted); }
+.info-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-1); margin: var(--sp-1) 0 0; }
+.info-tile { padding: var(--sp-1) var(--sp-2); border-radius: var(--sp-1); background: var(--neutral-100); }
+.info-tile dt { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); line-height: var(--lh-xs); font-weight: 700; color: var(--c-text); }
+.info-tile dd { margin: 2px 0 0; font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+.potensi-card__actions { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-1); }
+
+/* --- tombol pill --- */
+.btn-pill { display: inline-flex; align-items: center; gap: var(--sp-1); padding: 8px var(--sp-3); border-radius: var(--radius-pill); font: 700 var(--fs-xs)/var(--lh-xs) var(--font-sans); transition: background .2s; }
+.btn-pill--primary { background: var(--c-brand); color: #fff; }
+.btn-pill--primary:hover { background: var(--c-brand-dark); }
+.btn-pill--soft { background: var(--secondary-100); color: var(--c-brand-dark); }
+.btn-pill--soft:hover { background: var(--secondary-200); }
+.btn-pill--white { background: #fff; color: var(--c-brand-dark); }
+.btn-pill--white:hover { background: var(--secondary-100); }
+.btn-pill--glass { background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.35); }
+.btn-pill--glass:hover { background: rgba(255, 255, 255, 0.3); }
+
+/* --- panel angka --- */
+.stats-panel { margin-top: var(--sp-4); padding: var(--sp-3); border-radius: var(--radius-md); background: var(--secondary-100); }
+.stats-panel__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.stats-panel__sub { font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+.stat-grid { display: grid; grid-template-columns: 1fr; gap: var(--sp-2); }
+.stat-box { padding: var(--sp-2) var(--sp-3); border-radius: var(--radius-md); background: #fff; }
+.stat-box__label { font-size: var(--fs-xs); line-height: var(--lh-xs); font-weight: 700; color: var(--c-muted); }
+.stat-box__value { margin: 2px 0; color: var(--c-text); }
+.stat-box__caption { min-height: 40px; font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+.bar { height: 6px; margin-top: var(--sp-1); border-radius: var(--radius-pill); background: var(--neutral-200); overflow: hidden; }
+.bar span { display: block; height: 100%; min-width: 4px; border-radius: inherit; background: var(--c-brand); }
+.stats-panel__source { margin-top: var(--sp-2); font-size: var(--fs-xs); line-height: var(--lh-xs); color: var(--c-muted); }
+
+/* --- banner CTA --- */
+.cta { position: relative; overflow: hidden; margin-top: var(--sp-4); padding: var(--sp-4) var(--sp-3); border-radius: var(--radius-md); color: #fff; background: linear-gradient(135deg, var(--c-brand), var(--c-brand-dark)); box-shadow: var(--shadow-card); }
+.cta__body { position: relative; z-index: 1; max-width: 640px; display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+.cta__text { color: rgba(255, 255, 255, 0.92); }
+.cta__actions { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-1); }
+.cta__circle { position: absolute; right: -60px; top: 50%; width: 260px; height: 260px; transform: translateY(-50%); border: 6px solid rgba(255, 255, 255, 0.18); border-radius: 50%; box-shadow: inset 0 0 0 55px rgba(255, 255, 255, 0.08); }
+
+@media (min-width: 640px) {
+  .info-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .cta { padding: var(--sp-4); }
+}
+@media (min-width: 960px) {
+  .potensi-card { grid-template-columns: 1fr 1fr; gap: var(--sp-5); padding: var(--sp-4) var(--sp-4); }
+  .potensi-card:nth-child(even) .potensi-card__body { order: -1; }
+  .stat-grid { grid-template-columns: repeat(4, 1fr); }
+  .stats-panel { padding: var(--sp-4); }
+}

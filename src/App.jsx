@@ -3,6 +3,7 @@ import Navbar from "./components/layout/Navbar.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ComingSoon from "./pages/ComingSoon.jsx";
+import PotensiPage from "./pages/PotensiPage.jsx";
 
 export default function App() {
   return (
@@ -11,8 +12,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          {/* Halaman berikutnya (dibangun setelah desain Figma halaman dalam selesai) */}
-          <Route path="/potensi" element={<ComingSoon title="Potensi Desa" />} />
+          <Route path="/potensi" element={<PotensiPage />} />
           <Route path="/umkm" element={<ComingSoon title="UMKM & Produk Unggulan" />} />
           <Route path="/galeri" element={<ComingSoon title="Galeri Dokumentasi" />} />
           <Route path="/berita" element={<ComingSoon title="Berita & Informasi" />} />
