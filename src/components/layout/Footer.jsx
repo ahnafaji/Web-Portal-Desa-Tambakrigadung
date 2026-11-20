@@ -35,7 +35,7 @@ export default function Footer() {
             </div>
           )}
         </AsyncBlock>
-        <p className="footer__copy">© 2026 Powered by Pemerintahan Desa Tambakrigadung</p>
+        <p className="footer__copy">© Pemerintah Desa Tambakrigadung. Dikembangkan bersama Mahasiswa Manajemen Informatika UNESA Angkatan 2024 (Kelompok 13).</p>
       </div>
     </footer>
   );

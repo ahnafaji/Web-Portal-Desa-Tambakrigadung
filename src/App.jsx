@@ -4,6 +4,11 @@ import Footer from "./components/layout/Footer.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ComingSoon from "./pages/ComingSoon.jsx";
 import PotensiPage from "./pages/PotensiPage.jsx";
+import UmkmPage from "./pages/UmkmPage.jsx";
+import UmkmDetailPage from "./pages/UmkmDetailPage.jsx";
+import UmkmDaftarPage from "./pages/UmkmDaftarPage.jsx";
+import BeritaPage from "./pages/BeritaPage.jsx";
+import BeritaDetailPage from "./pages/BeritaDetailPage.jsx";
 
 export default function App() {
   return (
@@ -13,9 +18,12 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/potensi" element={<PotensiPage />} />
-          <Route path="/umkm" element={<ComingSoon title="UMKM & Produk Unggulan" />} />
+          <Route path="/umkm" element={<UmkmPage />} />
+          <Route path="/umkm/daftar" element={<UmkmDaftarPage />} />
+          <Route path="/umkm/:slug" element={<UmkmDetailPage />} />
           <Route path="/galeri" element={<ComingSoon title="Galeri Dokumentasi" />} />
-          <Route path="/berita" element={<ComingSoon title="Berita & Informasi" />} />
+          <Route path="/berita" element={<BeritaPage />} />
+          <Route path="/berita/:slug" element={<BeritaDetailPage />} />
           <Route path="/kontak" element={<ComingSoon title="Kontak & Lokasi" />} />
           <Route path="*" element={<ComingSoon title="Halaman tidak ditemukan" />} />
         </Routes>
