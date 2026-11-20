@@ -33,6 +33,13 @@ function getMockUmkmDetail(slug) {
   return { item, related };
 }
 
+function getMockGaleriDetail(slug) {
+  const all = mock.galeriPage.items;
+  const item = all.find((g) => g.slug === slug) || all[0];
+  const related = all.filter((g) => g.slug !== item.slug).slice(0, 3);
+  return { item, related };
+}
+
 async function postForm(path, formData) {
   if (USE_MOCK) {
     await delay(null, 650);
@@ -67,4 +74,25 @@ export const api = {
   getBeritaPage: get("/berita/halaman", mock.beritaPage),
   getBeritaDetail: (slug, opts) => USE_MOCK ? delay(getMockBeritaDetail(slug)) : request(`/berita/${slug}`, opts),
   getKontak: get("/kontak", mock.kontak),
+  getGaleriPage: get("/galeri/halaman", mock.galeriPage),
+  getGaleriDetail: (slug, opts) => USE_MOCK ? delay(getMockGaleriDetail(slug)) : request(`/galeri/${slug}`, opts),
+  getKontakPage: get("/kontak/halaman", mock.kontakPage),
+  submitPengaduan: async (formData) => {
+     if (USE_MOCK) {
+       await delay(null, 650);
+       const kode = `ADU-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+       return {
+         tiket: kode,
+         message: "Laporan aspirasi/pengaduan berhasil tercatat dalam sistem pamong desa.",
+       };
+     }
+     const res = await fetch(`${BASE_URL}/pengaduan`, {
+       method: "POST",
+       body: formData,
+       headers: { Accept: "application/json" },
+     });
+     if (!res.ok) throw new Error(`Gagal mengirim pengaduan (${res.status})`);
+     const json = await res.json();
+     return json && json.data !== undefined ? json.data : json;
+   },
 };

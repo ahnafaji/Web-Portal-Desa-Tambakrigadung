@@ -3,6 +3,7 @@ import {
   Landmark, Store, Sprout, Ruler, Phone, Navigation, Image as ImageIcon, MapPin, Mail, HelpCircle,
   Newspaper, RefreshCw, Star, Clock, User, Eye, Search, Tag, Megaphone, HardHat, HeartPulse, Camera,
   Award, ShieldCheck, Sparkles, ShoppingBag, Compass, Wrench, Coffee, Wallet, Headset, BookOpen,
+  FolderArchive, Download, FileText, CheckCircle2,
 } from "lucide-react";
 
 const ICONS = {
@@ -13,7 +14,8 @@ const ICONS = {
   user: User, eye: Eye, search: Search, tag: Tag, megaphone: Megaphone, hardhat: HardHat,
   heart: HeartPulse, camera: Camera, award: Award, shield: ShieldCheck, sparkles: Sparkles,
   bag: ShoppingBag, compass: Compass, wrench: Wrench, coffee: Coffee, wallet: Wallet,
-  headset: Headset, book: BookOpen,
+  headset: Headset, book: BookOpen, archive: FolderArchive, download: Download, file: FileText,
+  check: CheckCircle2,
 };
 
 export const getIcon = (name) => ICONS[name] || HelpCircle;

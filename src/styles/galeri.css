@@ -1,0 +1,429 @@
+/* ===== Halaman Katalog Galeri & Detail Dokumentasi ===== */
+
+/* --- Header Halaman Galeri --- */
+.galeri-head { margin-bottom: var(--sp-3); }
+.galeri-head__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.galeri-head__intro { flex: 1 1 460px; max-width: 660px; }
+.galeri-head__title { margin: var(--sp-1) 0 4px; color: var(--c-text); }
+.galeri-head__desc { font-size: var(--fs-xs); line-height: 1.6; color: var(--c-muted); }
+
+.galeri-head__stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.galeri-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px var(--sp-3);
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 5px rgba(43, 40, 37, 0.08);
+}
+.galeri-stat-card__icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--secondary-100);
+  color: var(--c-brand-dark);
+}
+.galeri-stat-card strong {
+  display: block;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--c-text);
+}
+.galeri-stat-card span { font-size: 11px; color: var(--c-muted); }
+
+/* --- Filter Chips Tengah --- */
+.galeri-chips {
+  justify-content: center;
+  margin: var(--sp-3) 0 var(--sp-4);
+}
+
+/* --- Grid Kartu Galeri 3 Kolom --- */
+.galeri-grid {
+  display: grid;
+  gap: var(--sp-3);
+}
+.galeri-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 5px rgba(43, 40, 37, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.galeri-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+.galeri-card__media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 11;
+  background: var(--neutral-200);
+}
+.galeri-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+.galeri-card:hover .galeri-card__media img { transform: scale(1.04); }
+.galeri-card__badge {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--c-brand-dark);
+  font-size: 11px;
+  font-weight: 700;
+}
+.galeri-card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+}
+.galeri-card__date-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+.galeri-card__title {
+  font-size: var(--fs-base);
+  line-height: 1.4;
+  font-weight: 700;
+  color: var(--c-text);
+}
+.galeri-card__title a:hover { color: var(--c-brand); }
+.galeri-card__footer {
+  margin-top: auto;
+  padding-top: var(--sp-1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-1);
+}
+.galeri-card__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+/* ===== Halaman Detail Galeri (/galeri/:slug) ===== */
+.galeri-detail-box {
+  padding: var(--sp-3);
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 6px rgba(43, 40, 37, 0.08);
+}
+.galeri-detail-box__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-1);
+}
+.galeri-detail-box__title {
+  color: var(--c-text);
+  margin-bottom: var(--sp-2);
+}
+.galeri-detail-box__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-3);
+  margin-bottom: var(--sp-3);
+  border-bottom: 1px solid var(--neutral-200);
+  font-size: 12px;
+  color: var(--c-muted);
+}
+.galeri-detail-box__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Carousel Utama */
+.galeri-slider__stage {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  background: var(--neutral-500);
+}
+.galeri-slider__stage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.galeri-slider__arrow {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--c-text);
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition: background 0.2s, transform 0.2s;
+}
+.galeri-slider__arrow:hover {
+  background: #fff;
+  transform: translateY(-50%) scale(1.06);
+}
+.galeri-slider__arrow--prev { left: var(--sp-2); }
+.galeri-slider__arrow--next { right: var(--sp-2); }
+
+.galeri-slider__overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-3) var(--sp-2);
+  background: linear-gradient(transparent, rgba(20, 20, 20, 0.82));
+  color: #fff;
+}
+.galeri-slider__caption {
+  flex: 1 1 320px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.94);
+}
+.galeri-slider__counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.65);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.galeri-slider__thumbs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+}
+.galeri-slider__thumb {
+  padding: 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border: 2.5px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-200);
+  opacity: 0.72;
+  cursor: pointer;
+  transition: opacity 0.2s, border-color 0.2s;
+}
+.galeri-slider__thumb:hover { opacity: 0.95; }
+.galeri-slider__thumb.is-active {
+  opacity: 1;
+  border-color: var(--c-brand);
+}
+.galeri-slider__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 3 Kartu Highlight Metrik */
+.galeri-metrics {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+.galeri-metric-tile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+}
+.galeri-metric-tile__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--secondary-100);
+  color: var(--c-brand-dark);
+}
+.galeri-metric-tile__label {
+  display: block;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+.galeri-metric-tile__val {
+  font-size: 15px;
+  color: var(--c-text);
+}
+
+/* Panel Ringkasan Liputan Kegiatan */
+.galeri-summary-panel {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3);
+  border-radius: var(--radius-md);
+  background: var(--neutral-100);
+}
+.galeri-summary-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.galeri-summary-panel__head h2 {
+  font-size: var(--fs-base);
+  color: var(--c-text);
+}
+.galeri-summary-panel__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-muted);
+}
+
+.galeri-summary-grid {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+}
+.galeri-summary-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.galeri-summary-item__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--c-brand-dark);
+}
+.galeri-summary-item dt {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--c-muted);
+}
+.galeri-summary-item dd {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+/* Action Bar Bawah Detail Galeri */
+.galeri-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--neutral-200);
+}
+.galeri-action-bar__share,
+.galeri-action-bar__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.galeri-action-bar__share span {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-muted);
+  margin-right: 2px;
+}
+.galeri-share-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font: 700 12px/1 var(--font-sans);
+  cursor: pointer;
+  text-decoration: none;
+}
+.galeri-share-pill--wa {
+  border: 0;
+  background: #1f8a4c;
+  color: #fff;
+}
+.galeri-share-pill--fb {
+  border: 0;
+  background: #1877f2;
+  color: #fff;
+}
+.galeri-share-pill--x {
+  border: 0;
+  background: #1e293b;
+  color: #fff;
+}
+.galeri-share-pill--light {
+  border: 1px solid var(--neutral-200);
+  background: #fff;
+  color: var(--c-text);
+}
+.galeri-share-pill--light:hover { background: var(--secondary-100); }
+
+/* ===== Responsive Breakpoints ===== */
+@media (min-width: 640px) {
+  .galeri-grid { grid-template-columns: repeat(2, 1fr); }
+  .galeri-metrics { grid-template-columns: repeat(3, 1fr); }
+  .galeri-summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .galeri-detail-box { padding: var(--sp-4); }
+}
+
+@media (min-width: 960px) {
+  .galeri-grid { grid-template-columns: repeat(3, 1fr); }
+  .galeri-summary-grid { grid-template-columns: repeat(3, 1fr); }
+  .galeri-summary-item--wide { grid-column: span 2; }
+}

@@ -8,6 +8,8 @@ import "./styles/home.css";
 import "./styles/potensi.css";
 import "./styles/berita.css";
 import "./styles/umkm.css";
+import "./styles/galeri.css";
+import "./styles/kontak.css";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>

@@ -1045,3 +1045,618 @@ export const potensiPage = {
     email: "Pemdestambakrigadung@gmail.com",
   },
 };
+
+
+
+
+export const galeriItems = [
+  {
+    id: 1,
+    slug: "kerja-bakti-membersihkan-saluran-air-desa-tambakrigadung",
+    judul: "Kerja Bakti Saluran Air",
+    judulLengkap: "Kerja Bakti Membersihkan Saluran Air Desa Tambakrigadung",
+    kategori: "kegiatan",
+    kategoriLabel: "Kegiatan Warga",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-02-20",
+    lokasi: "Dusun Krajan, Desa Tambakrigadung",
+    jumlahFoto: 5,
+    dokumentator: "Humas & Karang Taruna",
+    beritaSlug: "kerja-bakti-membersihkan-saluran-air-desa-tambakrigadung",
+    image: img("hero-1.jpg"),
+    fotos: [
+      {
+        src: img("hero-1.jpg"),
+        caption:
+          "Foto 1: Warga Dusun Krajan bersama-sama menormalisasi endapan lumpur saluran irigasi menjelang musim tanam padi.",
+      },
+      {
+        src: img("hero-3.jpg"),
+        caption:
+          "Foto 2: Pembersihan tanaman enceng gondok dan sampah organik di pintu pembagi air saluran sekunder.",
+      },
+      {
+        src: img("potensi-tambak.jpg"),
+        caption:
+          "Foto 3: Penguatan tanggul saluran irigasi menggunakan trucuk bambu oleh pemuda Karang Taruna.",
+      },
+      {
+        src: img("potensi-wisata.jpg"),
+        caption:
+          "Foto 4: Koordinasi lapangan bersama perangkat desa, Babinsa, dan ketua RT setempat.",
+      },
+      {
+        src: img("potensi-domba.jpg"),
+        caption:
+          "Foto 5: Suasana ramah tamah dan konsumsi bersama warga setelah kegiatan kerja bakti selesai.",
+      },
+    ],
+    highlights: [
+      { ikon: "ruler", label: "Panjang Saluran Dinormalisasi", value: "2,1 Kilometer" },
+      { ikon: "users", label: "Jumlah Partisipan Gotong Royong", value: "80+ Warga Dusun" },
+      { ikon: "clock", label: "Waktu Pelaksanaan", value: "06.30 - 11.00 WIB" },
+    ],
+    ringkasan: {
+      tanggal: "20 Februari 2026",
+      lokasi: "Saluran Irigasi Dusun Krajan",
+      partisipan: "80+ Warga & Karang Taruna",
+      penyelenggara: "Pemerintah Desa & Babinsa",
+      capaian: "Normalisasi 2,1 KM Aliran Irigasi & Penguatan Tanggul Sawah",
+    },
+  },
+  {
+    id: 2,
+    slug: "panen-raya-tambak-ikan-sentra-tambak-boyo",
+    judul: "Panen Raya Tambak Ikan",
+    judulLengkap: "Panen Raya Ikan Bandeng & Nila di Sentra Tambak Boyo",
+    kategori: "wisata",
+    kategoriLabel: "Wisata & Budaya",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-02-18",
+    lokasi: "Dusun Tambakboyo, Desa Tambakrigadung",
+    jumlahFoto: 8,
+    dokumentator: "Pokdakan & Humas Desa",
+    beritaSlug: "panen-raya-bandeng-dan-nila-sentra-budidaya-tambak-boyo",
+    image: img("potensi-tambak.jpg"),
+    fotos: [
+      {
+        src: img("potensi-tambak.jpg"),
+        caption:
+          "Foto 1: Proses penjaringan ikan bandeng dan nila segar saat panen raya bersama kelompok pembudidaya.",
+      },
+      {
+        src: img("hero-1.jpg"),
+        caption:
+          "Foto 2: Penyortiran ukuran ikan hasil panen untuk distribusi pasar lokal dan mitra UMKM olahan.",
+      },
+      {
+        src: img("potensi-wisata.jpg"),
+        caption:
+          "Foto 3: Kawasan tambak air tawar terintegrasi di Dusun Tambakboyo.",
+      },
+    ],
+    highlights: [
+      { ikon: "fish", label: "Total Hasil Panen Raya", value: "1,5+ Ton Ikan" },
+      { ikon: "users", label: "Kelompok Pembudidaya", value: "35 Petambak" },
+      { ikon: "clock", label: "Waktu Pelaksanaan", value: "07.00 - 10.30 WIB" },
+    ],
+    ringkasan: {
+      tanggal: "18 Februari 2026",
+      lokasi: "Sentra Budidaya Dusun Tambakboyo",
+      partisipan: "35 Anggota Pokdakan & Pemdes",
+      penyelenggara: "Pokdakan Tambak Boyo & BUMDes",
+      capaian: "Panen 1,5 Ton Bandeng & Nila Kualitas Ekspor Lokal",
+    },
+  },
+  {
+    id: 3,
+    slug: "musyawarah-perencanaan-pembangunan-desa-2026",
+    judul: "Musyawarah Desa 2026",
+    judulLengkap: "Musyawarah Perencanaan Pembangunan Desa (Musrenbangdes) 2026",
+    kategori: "pemerintahan",
+    kategoriLabel: "Pemerintahan",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-02-15",
+    lokasi: "Pendopo Balai Desa Tambakrigadung",
+    jumlahFoto: 12,
+    dokumentator: "Sekretariat Pemdes",
+    beritaSlug: "musyawarah-penetapan-rencana-kerja-pemerintah-desa-2026",
+    image: img("hero-3.jpg"),
+    fotos: [
+      {
+        src: img("hero-3.jpg"),
+        caption:
+          "Foto 1: Pemaparan rancangan prioritas pembangunan dan ketahanan pangan pada forum Musrenbangdes 2026.",
+      },
+      {
+        src: img("hero-1.jpg"),
+        caption:
+          "Foto 2: Diskusi dan penyerapan aspirasi perwakilan RT/RW, BPD, LPM, serta tokoh masyarakat.",
+      },
+    ],
+    highlights: [
+      { ikon: "users", label: "Peserta Forum Musdes", value: "65 Perwakilan" },
+      { ikon: "landmark", label: "Program Prioritas", value: "14 Kegiatan" },
+      { ikon: "clock", label: "Waktu Pelaksanaan", value: "09.00 - 13.00 WIB" },
+    ],
+    ringkasan: {
+      tanggal: "15 Februari 2026",
+      lokasi: "Pendopo Balai Desa Tambakrigadung",
+      partisipan: "Pemdes, BPD, LPM, PKK & Tokoh Warga",
+      penyelenggara: "Pemerintah Desa & BPD Tambakrigadung",
+      capaian: "Penetapan 14 Program Prioritas RKPDes Tahun Anggaran 2026",
+    },
+  },
+  {
+    id: 4,
+    slug: "pengecoran-jalan-usaha-tani-blok-pertanian-timur",
+    judul: "Pengecoran Jalan Tani",
+    judulLengkap: "Pengecoran Jalan Usaha Tani Blok Pertanian Timur Selesai 100%",
+    kategori: "pembangunan",
+    kategoriLabel: "Pembangunan",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-02-10",
+    lokasi: "Blok Pertanian Timur, Desa Tambakrigadung",
+    jumlahFoto: 6,
+    dokumentator: "TPK Desa Tambakrigadung",
+    beritaSlug: "pengecoran-jalan-usaha-tani-blok-timur-tahap-finishing",
+    image: img("potensi-wisata.jpg"),
+    fotos: [
+      {
+        src: img("potensi-wisata.jpg"),
+        caption:
+          "Foto 1: Pengerjaan rabat beton Jalan Usaha Tani Blok Timur guna memperlancar distribusi hasil panen.",
+      },
+      {
+        src: img("hero-1.jpg"),
+        caption:
+          "Foto 2: Pemeriksaan ketebalan dan perataan permukaan beton oleh Tim Pelaksana Kegiatan (TPK).",
+      },
+    ],
+    highlights: [
+      { ikon: "ruler", label: "Panjang Rabat Beton", value: "320 Meter" },
+      { ikon: "users", label: "Tenaga Padat Karya", value: "28 Warga Lokal" },
+      { ikon: "banknote", label: "Sumber Pendanaan", value: "APBDes 2026" },
+    ],
+    ringkasan: {
+      tanggal: "10 Februari 2026",
+      lokasi: "Blok Pertanian Timur",
+      partisipan: "TPK Desa & Pekerja Padat Karya Tunai",
+      penyelenggara: "Tim Pelaksana Kegiatan (TPK) Desa",
+      capaian: "Penyelesaian 100% Jalan Rabat Beton Pertanian Sepanjang 320 Meter",
+    },
+  },
+  {
+    id: 5,
+    slug: "pentas-seni-jaranan-tradisi-sedekah-bumi",
+    judul: "Pentas Seni Jaranan",
+    judulLengkap: "Pentas Seni Jaranan & Kirab Budaya Sedekah Bumi Desa",
+    kategori: "wisata",
+    kategoriLabel: "Wisata",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-02-05",
+    lokasi: "Lapangan Utama Desa Tambakrigadung",
+    jumlahFoto: 10,
+    dokumentator: "Karang Taruna & Pokdarwis",
+    beritaSlug: "kerja-bakti-membersihkan-saluran-air-desa-tambakrigadung",
+    image: img("potensi-domba.jpg"),
+    fotos: [
+      {
+        src: img("potensi-domba.jpg"),
+        caption:
+          "Foto 1: Penampilan kesenian tradisional Jaranan dalam rangkaian acara tahunan Sedekah Bumi warga.",
+      },
+      {
+        src: img("potensi-wisata.jpg"),
+        caption:
+          "Foto 2: Antusiasme ratusan warga dan pengunjung menyaksikan atraksi budaya lokal.",
+      },
+    ],
+    highlights: [
+      { ikon: "users", label: "Pengunjung Hadir", value: "500+ Warga" },
+      { ikon: "store", label: "Lapak UMKM Terlibat", value: "22 Stan" },
+      { ikon: "clock", label: "Waktu Pertunjukan", value: "13.00 - 17.00 WIB" },
+    ],
+    ringkasan: {
+      tanggal: "05 Februari 2026",
+      lokasi: "Lapangan Utama Desa Tambakrigadung",
+      partisipan: "Seniman Lokal, Pokdarwis & Warga Desa",
+      penyelenggara: "Panitia Sedekah Bumi & Karang Taruna",
+      capaian: "Pelestarian Budaya Lokal & Peningkatan Omzet 22 Pelaku UMKM",
+    },
+  },
+  {
+    id: 6,
+    slug: "pelatihan-digital-marketing-dan-foto-produk-umkm",
+    judul: "Pelatihan Digital Marketing UMKM",
+    judulLengkap: "Pelatihan Digital Marketing & Foto Produk Pelaku UMKM Desa",
+    kategori: "kegiatan",
+    kategoriLabel: "Kegiatan Warga",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-01-28",
+    lokasi: "Aula Balai Desa Tambakrigadung",
+    jumlahFoto: 7,
+    dokumentator: "BUMDes & Paguyuban UMKM",
+    beritaSlug: "pelatihan-pemasaran-digital-dan-sertifikasi-halal-umkm",
+    image: img("hero-3.jpg"),
+    fotos: [
+      {
+        src: img("hero-3.jpg"),
+        caption:
+          "Foto 1: Pendampingan teknik foto produk dan pembuatan katalog digital bagi pelaku UMKM desa.",
+      },
+      {
+        src: img("hero-1.jpg"),
+        caption:
+          "Foto 2: Simulasi pemasaran produk olahan tambak dan kerajinan melalui portal resmi desa.",
+      },
+    ],
+    highlights: [
+      { ikon: "users", label: "Peserta UMKM", value: "25 Pelaku Usaha" },
+      { ikon: "camera", label: "Produk Terfoto", value: "40+ Varian" },
+      { ikon: "clock", label: "Durasi Pelatihan", value: "08.30 - 14.00 WIB" },
+    ],
+    ringkasan: {
+      tanggal: "28 Januari 2026",
+      lokasi: "Aula Balai Desa Tambakrigadung",
+      partisipan: "25 Anggota Paguyuban UMKM Desa",
+      penyelenggara: "BUMDes Boyo Makmur & Mahasiswa KKN/MBKM",
+      capaian: "Digitalisasi 40+ Katalog Produk Lokal & Fasilitasi Sertifikasi Halal",
+    },
+  },
+  {
+    id: 7,
+    slug: "pembangunan-gazebo-ekowisata-boyo-sirno",
+    judul: "Pembangunan Gazebo Boyo Sirno",
+    judulLengkap: "Pembangunan Dermaga & Gazebo Ekowisata Boyo Sirno",
+    kategori: "pembangunan",
+    kategoriLabel: "Pembangunan",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-01-20",
+    lokasi: "Kawasan Wisata Boyo Sirno",
+    jumlahFoto: 9,
+    dokumentator: "Pokdarwis Boyo Sirno",
+    beritaSlug: "pengecoran-jalan-usaha-tani-blok-timur-tahap-finishing",
+    image: img("potensi-wisata.jpg"),
+    fotos: [
+      {
+        src: img("potensi-wisata.jpg"),
+        caption:
+          "Foto 1: Pemasangan gazebo kayu dan jembatan bambu di tepi embung ekowisata Boyo Sirno.",
+      },
+    ],
+    highlights: [
+      { ikon: "trees", label: "Fasilitas Terbangun", value: "4 Unit Gazebo" },
+      { ikon: "banknote", label: "Alokasi Anggaran", value: "Rp 15.000.000" },
+      { ikon: "users", label: "Pengelola Wisata", value: "Pokdarwis Desa" },
+    ],
+    ringkasan: {
+      tanggal: "20 Januari 2026",
+      lokasi: "Kawasan Ekowisata Boyo Sirno",
+      partisipan: "Pokdarwis, TPK Desa & Warga Sekitar",
+      penyelenggara: "Pemerintah Desa & Pokdarwis Boyo Sirno",
+      capaian: "Pembangunan 4 Gazebo Santai & Dermaga Swafoto Pengunjung",
+    },
+  },
+  {
+    id: 8,
+    slug: "pelayanan-posyandu-balita-dan-lansia-dusun-melik",
+    judul: "Pelayanan Posyandu Melik",
+    judulLengkap: "Pelayanan Posyandu Balita & Pemeriksaan Kesehatan Lansia Dusun Melik",
+    kategori: "pemerintahan",
+    kategoriLabel: "Pemerintahan",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-01-12",
+    lokasi: "Balai Posyandu Dusun Melik",
+    jumlahFoto: 6,
+    dokumentator: "Kader Posyandu & Bidan Desa",
+    beritaSlug: "jadwal-imunisasi-balita-dan-cek-kesehatan-lansia-posyandu-melik",
+    image: img("hero-1.jpg"),
+    fotos: [
+      {
+        src: img("hero-1.jpg"),
+        caption:
+          "Foto 1: Pemeriksaan tumbuh kembang balita dan pemberian makanan tambahan bergizi oleh kader Posyandu.",
+      },
+    ],
+    highlights: [
+      { ikon: "users", label: "Balita Terlayani", value: "48 Anak" },
+      { ikon: "heart", label: "Pemeriksaan Lansia", value: "35 Warga" },
+      { ikon: "clock", label: "Waktu Layanan", value: "08.00 - 11.30 WIB" },
+    ],
+    ringkasan: {
+      tanggal: "12 Januari 2026",
+      lokasi: "Balai Posyandu Dusun Melik",
+      partisipan: "Kader Posyandu, Bidan Desa & Ibu Balita",
+      penyelenggara: "TP PKK & Puskesmas Kecamatan Tikung",
+      capaian: "Skrining Kesehatan 48 Balita & 35 Warga Lansia",
+    },
+  },
+  {
+    id: 9,
+    slug: "panen-padi-organik-kelompok-tani-rukun-makmur",
+    judul: "Panen Padi Organik Rukun Makmur",
+    judulLengkap: "Panen Padi Organik Kelompok Tani Rukun Makmur Tambakrigadung",
+    kategori: "kegiatan",
+    kategoriLabel: "Kegiatan Warga",
+    arsipBadge: "Arsip Resmi Desa",
+    tanggal: "2026-01-05",
+    lokasi: "Area Persawahan Dusun Krajan & Melik",
+    jumlahFoto: 8,
+    dokumentator: "Gapoktan Tambakrigadung",
+    beritaSlug: "panen-raya-bandeng-dan-nila-sentra-budidaya-tambak-boyo",
+    image: img("potensi-tambak.jpg"),
+    fotos: [
+      {
+        src: img("potensi-tambak.jpg"),
+        caption:
+          "Foto 1: Petani anggota Poktan Rukun Makmur menunjukkan hasil panen gabah padi organik berkualitas unggul.",
+      },
+    ],
+    highlights: [
+      { ikon: "wheat", label: "Luas Lahan Panen", value: "18 Hektar" },
+      { ikon: "users", label: "Petani Terlibat", value: "42 Anggota" },
+      { ikon: "sprout", label: "Metode Budidaya", value: "Pupuk Organik" },
+    ],
+    ringkasan: {
+      tanggal: "05 Januari 2026",
+      lokasi: "Persawahan Dusun Krajan & Melik",
+      partisipan: "42 Anggota Poktan Rukun Makmur & PPL",
+      penyelenggara: "Gapoktan Tambakrigadung",
+      capaian: "Produktivitas Gabah Meningkat 18% dengan Pupuk Organik Mandiri",
+    },
+  },
+];
+
+export const galeriPage = {
+  header: {
+    badge: "Arsip Publik Tambakrigadung",
+    judul: "Galeri Foto Desa Tambakrigadung",
+    deskripsi:
+      "Dokumentasi visual berbagai kegiatan warga, pembangunan infrastruktur, dan keindahan desa.",
+    stats: [
+      { ikon: "camera", value: "140+", label: "Foto Dokumentasi" },
+      { ikon: "compass", value: "4 Dusun", label: "Wilayah Terliput" },
+    ],
+  },
+  kategoriTabs: [
+    { key: "semua", label: "Semua" },
+    { key: "kegiatan", label: "Kegiatan Warga" },
+    { key: "pembangunan", label: "Pembangunan" },
+    { key: "wisata", label: "Wisata" },
+    { key: "pemerintahan", label: "Pemerintahan" },
+  ],
+  items: galeriItems,
+};
+
+
+
+
+export const kontakPage = {
+  header: {
+    badge: "HUBUNGI PEMERINTAH DESA",
+    judul: "Kontak Resmi & Pusat Bantuan Warga",
+    deskripsi:
+      "Pemerintah Desa Tambakrigadung, Kec. Tikung, Kab. Lamongan. Akses cepat dan langsung ke seluruh saluran komunikasi, pamong desa, posko darurat, dan layanan aduan masyarakat.",
+    jamPiket: "Jam Kerja Piket Pelayanan Aktif (08.00 - 15.00 WIB)",
+    komitmenBadge: "Transparan, Akuntabel & Bebas Pungli",
+  },
+  channels: [
+    {
+      key: "balai",
+      varian: "default",
+      ikon: "landmark",
+      status: "Buka 08.00 - 15.00",
+      judul: "Kantor Balai Desa",
+      deskripsi:
+        "VC9G+67Q, Jl. Raya Tambak Boyo, Dusun Tambakboyo, Tambakrigadung, Kec. Tikung, Lamongan 62281",
+      highlight: "Kode Wilayah: 35.24.23.2011",
+      ctaLabel: "Petunjuk Arah Google Maps",
+      href: `${MAPS}${encodeURIComponent("Balai Desa Tambakrigadung Tikung Lamongan")}`,
+      external: true,
+    },
+    {
+      key: "whatsapp",
+      varian: "featured",
+      ikon: "phone",
+      status: "Hotline 24 Jam",
+      judul: "WhatsApp Pengaduan Cepat",
+      deskripsi:
+        "Layanan pesan singkat langsung ke operator Pamong Desa Tambakrigadung.",
+      highlight: "+62 813-3283-7585",
+      ctaLabel: "Chat WhatsApp Sekarang",
+      href: "https://wa.me/6281332837585?text=Halo%20Admin%20Desa%20Tambakrigadung,%20saya%20ingin%20menyampaikan%20pengaduan/pertanyaan.",
+      external: true,
+    },
+    {
+      key: "darurat",
+      varian: "warning",
+      ikon: "shield",
+      status: "Siaga 24 Jam",
+      judul: "Posko Darurat & Kamtibmas",
+      deskripsi:
+        "Hubungi Piket Babinsa, Bhabinkamtibmas, atau Tim Siaga Bencana Desa.",
+      highlight: "Darurat: +62 3888 994 838",
+      ctaLabel: "Hubungi Call Center Darurat",
+      href: "tel:+623888994838",
+      external: false,
+    },
+    {
+      key: "email",
+      varian: "info",
+      ikon: "mail",
+      status: "Administratif",
+      judul: "Email & Persuratan Resmi",
+      deskripsi: "pemdes@tambakrigadung.desa.id tambakrigadung@gmail.com",
+      highlight: "Pelayanan surat-menyurat & dokumen instansi.",
+      ctaLabel: "Kirim Surat Elektronik",
+      href: "mailto:tambakrigadung@gmail.com?subject=Permohonan%20Informasi%20/%20Persuratan%20Desa",
+      external: false,
+    },
+  ],
+  pamong: {
+    eyebrow: "DIREKTORI KONTAK LANGSUNG PAMONG DESA",
+    judul: "Pejabat & Pengurus Desa Siaga",
+    subjudul:
+      "Hubungi aparatur desa terkait langsung via panggilan atau WhatsApp sesuai bidang kebutuhan layanan Anda.",
+    items: [
+      {
+        inisial: "MT",
+        warna: "green",
+        nama: "Pak Moh. Takim",
+        jabatan: "Kepala Desa",
+        bidang: "Kebijakan Umum",
+        telepon: "+62 813-3283-7585",
+        wa: "6281332837585",
+      },
+      {
+        inisial: "SD",
+        warna: "emerald",
+        nama: "Sekretaris Desa",
+        jabatan: "Pelayanan Administrasi",
+        bidang: "Persuratan",
+        telepon: "+62 3888 994 838",
+        wa: "6281332837585",
+      },
+      {
+        inisial: "BK",
+        warna: "amber",
+        nama: "Babinsa & Bhabinkamtibmas",
+        jabatan: "Keamanan & Ketertiban",
+        bidang: "Kamtibmas 24J",
+        telepon: "+62 812-3456-7891",
+        wa: "6281332837585",
+      },
+      {
+        inisial: "BPD",
+        warna: "slate",
+        nama: "Ketua BPD",
+        jabatan: "Badan Permusyawaratan",
+        bidang: "Aspirasi Warga",
+        telepon: "+62 812-3456-7892",
+        wa: "6281332837585",
+      },
+    ],
+  },
+  sop: {
+    eyebrow: "STANDAR OPERASIONAL PROSEDUR (SOP)",
+    judul: "Alur Penanganan Pengaduan & Aspirasi Warga",
+    subjudul:
+      "Setiap laporan diproses secara transparan dengan estimasi kepastian tindak lanjut terukur oleh perangkat desa.",
+    steps: [
+      {
+        nomor: "01",
+        ikon: "megaphone",
+        judul: "Penyampaian Aduan/Aspirasi",
+        deskripsi:
+          "Warga mengisi formulir digital maupun menghubungi saluran resmi desa, atau datang langsung ke meja layanan Balai Desa.",
+      },
+      {
+        nomor: "02",
+        ikon: "file",
+        judul: "Verifikasi Sekretariat",
+        deskripsi:
+          "Operator sekretariat memverifikasi identitas pelapor, lokasi kejadian, serta menerbitkan Nomor Tiket Aduan.",
+      },
+      {
+        nomor: "03",
+        ikon: "users",
+        judul: "Tindak Lanjut Lapangan",
+        deskripsi:
+          "Disposisi kepada Kepala Dusun, TP PKK, atau teknis terkait untuk penyelesaian lapangan bersama warga/instansi.",
+      },
+      {
+        nomor: "04",
+        ikon: "check",
+        judul: "Publikasi & Konfirmasi",
+        deskripsi:
+          "Pelapor mendapatkan notifikasi penyelesaian laporan melalui WhatsApp maupun portal desa.",
+      },
+    ],
+  },
+  dusunOptions: [
+    "Dusun Krajan",
+    "Dusun Tambakboyo",
+    "Dusun Melik",
+    "Dusun Boyo",
+  ],
+  kategoriAduanOptions: [
+    "Infrastruktur & Jalan Desa",
+    "Administrasi & Kependudukan",
+    "Saluran Irigasi & Pertanian",
+    "Keamanan & Ketertiban (Kamtibmas)",
+    "Kesehatan & Sosial (Posyandu/Bansos)",
+    "Usulan Pembangunan / Aspirasi Warga",
+  ],
+  prioritasOptions: [
+    {
+      key: "biasa",
+      label: "Biasa",
+      estimasi: "3–5 Hari Kerja",
+    },
+    {
+      key: "penting",
+      label: "Penting",
+      estimasi: "1–2 Hari Kerja",
+    },
+    {
+      key: "mendesak",
+      label: "Sangat Mendesak",
+      estimasi: "Penanganan Segera",
+    },
+  ],
+  sidebar: {
+    lokasi: {
+      badge: "Pusat Layanan",
+      judul: "Lokasi Balai Desa",
+      deskripsi:
+        "Jl. Raya Tambak Boyo, Tikung, Tambakboyo, Kec. Tikung, Kab. Lamongan, Jawa Timur 62281.",
+      koordinat: "-7.143821, 112.398412",
+      mapEmbedUrl:
+        "https://www.google.com/maps?q=Tambakrigadung,+Tikung,+Lamongan+Regency,+East+Java&output=embed",
+      mapsHref: `${MAPS}${encodeURIComponent("Balai Desa Tambakrigadung Tikung Lamongan")}`,
+    },
+    sosmed: {
+      judul: "Media Sosial & Informasi Resmi",
+      deskripsi:
+        "Ikuti kanal informasi resmi desa untuk pengumuman dan kegiatan terbaru secara daring.",
+      items: [
+        {
+          ikon: "camera",
+          nama: "@desatambakrigadung",
+          platform: "Instagram Official",
+          href: "https://instagram.com",
+        },
+        {
+          ikon: "users",
+          nama: "Pemerintah Desa Tambakrigadung",
+          platform: "Halaman Facebook",
+          href: "https://facebook.com",
+        },
+        {
+          ikon: "eye",
+          nama: "Tambakrigadung TV",
+          platform: "Kanal YouTube",
+          href: "https://youtube.com",
+        },
+      ],
+    },
+    bantuanLangsung: {
+      judul: "Butuh Bantuan Langsung?",
+      deskripsi:
+        "Apabila mengalami kendala pengisian formulir dalam sistem, hubungi operator kantor desa secara langsung.",
+      telepon: "+62 3888 994 838",
+      href: "tel:+623888994838",
+    },
+  },
+  maklumat: {
+    badge: "Maklumat Pelayanan Publik Resmi",
+    judul: "Komitmen Bebas Pungutan Liar (Pungli) & Pelayanan Transparan",
+    kutipan:
+      "“Dengan ini kami segenap Pemerintah Desa Tambakrigadung menyatakan sanggup menyelenggarakan pelayanan prima kepada seluruh warga masyarakat desa serta segala bentuk pengaduan cepat, ramah, dan transparan sesuai dengan peraturan perundang-undangan.”",
+    catatan:
+      "Sesuai Keputusan Kepala Desa Tambakrigadung tentang Standar Pelayanan Minimal (SPM) Desa.",
+    pejabat: "Pak Moh. Takim",
+    jabatan: "Kepala Desa Tambakrigadung",
+  },
+};
