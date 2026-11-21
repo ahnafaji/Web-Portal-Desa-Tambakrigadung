@@ -1,0 +1,351 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  OPERATOR_DESA
+}
+
+enum UmkmStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AduanPrioritas {
+  BIASA
+  PENTING
+  MENDESAK
+}
+
+enum AduanStatus {
+  MENUNGGU
+  DIPROSES
+  SELESAI
+  DITOLAK
+}
+
+// 1. MANAJEMEN PENGGUNA & AUDIT
+model Admin {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  username     String      @unique
+  passwordHash String
+  nama         String
+  role         Role        @default(OPERATOR_DESA)
+  isActive     Boolean     @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  auditLogs    AuditLog[]
+
+  @@map("admins")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  adminId    String?
+  action     String   // LOGIN, LOGOUT, CREATE, UPDATE, DELETE, VERIFY, DISPOSISI
+  entity     String   // UMKM, BERITA, APBD, PENGADUAN, PROFIL, AUTH
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  admin Admin? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+// 2. BERITA & ARTIKEL DESA
+model Berita {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  judul         String
+  kategoriKey   String   // pengumuman, kegiatan, pembangunan, kesehatan, pertanian
+  kategoriLabel String
+  subLabel      String?
+  featured      Boolean  @default(false)
+  tanggal       DateTime @default(now())
+  penulis       String
+  waktuBaca     String   @default("4 Menit Baca")
+  pembaca       Int      @default(0)
+  image         String
+  caption       String?
+  ringkasan     String
+  dateline      String?
+  konten        Json     // Array of { type, text, author?, role? }
+  tags          String[]
+  isPublished   Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  galeriItems   Galeri[]
+
+  @@index([kategoriKey])
+  @@index([isPublished, tanggal])
+  @@map("berita")
+}
+
+// 3. POTENSI DESA
+model PotensiDesa {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  kategoriKey   String   // wisata, perikanan, peternakan
+  kategoriLabel String
+  ikon          String?
+  lokasi        String
+  judul         String
+  image         String
+  deskripsi     String[] // Array teks paragraf
+  info          Json     // Array of { ikon, label, value }
+  aksi          Json?    // Array of { label, href/to, ikon, primary }
+  urutan        Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("potensi_desa")
+}
+
+// 4. DIREKTORI UMKM DESA
+model Umkm {
+  id               String     @id @default(uuid())
+  slug             String     @unique
+  nama             String
+  kategori         String     // pangan, olahan, kerajinan, jasa
+  kategoriLabel    String
+  badgeUtama       String?
+  ratingLabel      String?
+  statusBuka       String?
+  jamOperasional   String?
+  dusun            String
+  alamat           String
+  patokanLokasi    String?
+  pemilik          String
+  whatsapp         String
+  pembayaran       String?
+  hargaLabel       String?
+  hargaSatuan      String?
+  hargaBadge       String?
+  hargaMulai       String?
+  hargaMin         Decimal?   @db.Decimal(12, 2)
+  hargaMax         Decimal?   @db.Decimal(12, 2)
+  tanggal          DateTime   @default(now())
+  image            String     // Foto utama
+  galeri           String[]   // Dokumentasi foto
+  ringkasan        String
+  tags             String[]
+  deskripsiLengkap String[]
+  catatanMenu      String?
+  mapEmbedUrl      String?
+  mapsHref         String?
+  petunjukArah     Json?      // { deskripsi, fasilitas: [] }
+  status           UmkmStatus @default(APPROVED)
+  verifiedAt       DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  menus            UmkmMenu[]
+
+  @@index([kategori])
+  @@index([status])
+  @@map("umkm")
+}
+
+model UmkmMenu {
+  id        String   @id @default(uuid())
+  umkmId    String
+  badge     String?
+  nama      String
+  deskripsi String?
+  harga     String
+  urutan    Int      @default(0)
+
+  umkm      Umkm     @relation(fields: [umkmId], references: [id], onDelete: Cascade)
+
+  @@index([umkmId])
+  @@map("umkm_menus")
+}
+
+// 5. GALERI DOKUMENTASI DESA
+model Galeri {
+  id           String        @id @default(uuid())
+  slug         String        @unique
+  judul        String
+  judulLengkap String
+  kategori     String        // kegiatan, wisata, pembangunan, pemerintahan
+  kategoriLabel String
+  arsipBadge   String        @default("Arsip Resmi Desa")
+  tanggal      DateTime      @default(now())
+  lokasi       String
+  dokumentator String
+  beritaSlug   String?
+  image        String
+  highlights   Json?         // Array of { ikon, label, value }
+  ringkasan    Json?         // { tanggal, lokasi, partisipan, penyelenggara, capaian }
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  berita       Berita?       @relation(fields: [beritaSlug], references: [slug], onDelete: SetNull)
+  fotos        GaleriFoto[]
+
+  @@index([kategori])
+  @@map("galeri")
+}
+
+model GaleriFoto {
+  id        String   @id @default(uuid())
+  galeriId  String
+  src       String
+  caption   String?
+  urutan    Int      @default(0)
+
+  galeri    Galeri   @relation(fields: [galeriId], references: [id], onDelete: Cascade)
+
+  @@index([galeriId])
+  @@map("galeri_fotos")
+}
+
+// 6. ASPIRASI & PENGADUAN WARGA
+model Pengaduan {
+  id            String         @id @default(uuid())
+  tiket         String         @unique // ADU-2026-XXXX
+  nama          String
+  whatsapp      String
+  dusun         String
+  kategori      String
+  prioritas     AduanPrioritas @default(BIASA)
+  judul         String
+  kronologi     String
+  lampiran      String?        // URL Supabase Storage
+  status        AduanStatus    @default(MENUNGGU)
+  tanggapan     String?
+  ditanganiOleh String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([tiket])
+  @@index([status])
+  @@map("pengaduan")
+}
+
+// 7. APBD & REALISASI KEUANGAN DESA
+model ApbdTahun {
+  id              String           @id @default(uuid())
+  tahun           Int              @unique
+  pendapatan      BigInt
+  belanja         BigInt
+  silpa           BigInt           @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  itemsPendapatan ApbdPendapatan[]
+  itemsBelanja    ApbdBelanja[]
+  realisasiTabel  ApbdRealisasi[]
+
+  @@map("apbd_tahun")
+}
+
+model ApbdPendapatan {
+  id          String    @id @default(uuid())
+  apbdTahunId String
+  sumber      String
+  nominal     BigInt
+
+  apbdTahun   ApbdTahun @relation(fields: [apbdTahunId], references: [id], onDelete: Cascade)
+
+  @@map("apbd_pendapatan")
+}
+
+model ApbdBelanja {
+  id          String    @id @default(uuid())
+  apbdTahunId String
+  bidang      String
+  nominal     BigInt
+
+  apbdTahun   ApbdTahun @relation(fields: [apbdTahunId], references: [id], onDelete: Cascade)
+
+  @@map("apbd_belanja")
+}
+
+model ApbdRealisasi {
+  id          String    @id @default(uuid())
+  apbdTahunId String
+  kode        String
+  kegiatan    String
+  detail      String
+  pagu        BigInt
+  realisasi   BigInt
+
+  apbdTahun   ApbdTahun @relation(fields: [apbdTahunId], references: [id], onDelete: Cascade)
+
+  @@map("apbd_realisasi")
+}
+
+// 8. DATA UMUM & PROFIL DESA
+model ProfilDesa {
+  id          String   @id @default(uuid())
+  sejarah     String
+  visi        String
+  misi        String[]
+  runningText String
+  updatedAt   DateTime @updatedAt
+
+  @@map("profil_desa")
+}
+
+model KepalaDesaRiwayat {
+  id      String @id @default(uuid())
+  urutan  Int
+  nama    String
+  periode String
+
+  @@map("kepala_desa_riwayat")
+}
+
+model PamongKontak {
+  id       String  @id @default(uuid())
+  inisial  String
+  warna    String  @default("green")
+  nama     String
+  jabatan  String
+  bidang   String
+  telepon  String
+  wa       String
+  urutan   Int     @default(0)
+
+  @@map("pamong_kontak")
+}
+
+model HeroSlider {
+  id       String  @id @default(uuid())
+  title    String
+  subtitle String
+  image    String
+  urutan   Int     @default(0)
+  isActive Boolean @default(true)
+
+  @@map("hero_sliders")
+}
+
+model StatistikDesa {
+  id     String  @id @default(uuid())
+  key    String  @unique
+  label  String
+  value  Int
+  icon   String
+  color  String  @default("#2b2825")
+  urutan Int     @default(0)
+
+  @@map("statistik_desa")
+}
