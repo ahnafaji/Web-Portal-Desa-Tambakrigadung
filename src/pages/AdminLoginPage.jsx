@@ -47,7 +47,6 @@ export default function AdminLoginPage() {
 
   return (
     <div className="admin-login-page">
-      {/* Kolom Kiri: Form Login */}
       <section className="admin-login-left" aria-labelledby="login-heading">
         <header className="admin-login-topbar">
           <Link to="/" className="admin-login-brand">
@@ -174,7 +173,6 @@ export default function AdminLoginPage() {
         </div>
       </section>
 
-      {/* Kolom Kanan: Panel Visual Sistem Informasi Desa */}
       <aside className="admin-login-right" aria-label="Informasi Sistem Desa">
         <div className="admin-login-right__top">
           <span className="admin-sid-pill">
