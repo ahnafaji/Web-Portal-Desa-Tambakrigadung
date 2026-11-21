@@ -3,6 +3,7 @@ html { scroll-behavior: smooth; }
 body { margin: 0; font-family: var(--font-sans); font-size: var(--fs-base); line-height: var(--lh-base); color: var(--c-text); background: var(--c-bg); }
 img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
+button { font-family: inherit; border: 0; }
 h1, h2, h3, h4, p { margin: 0; }
 :focus-visible { outline: 3px solid var(--c-brand-soft); outline-offset: 2px; }
 
@@ -22,6 +23,13 @@ h1, h2, h3, h4, p { margin: 0; }
 .btn { display: inline-flex; align-items: center; gap: var(--sp-1); padding: 8px var(--sp-3); border: 0; border-radius: var(--radius-sm); font: 700 var(--fs-base)/var(--lh-base) var(--font-sans); color: #fff; background: var(--c-brand); box-shadow: var(--shadow-card); cursor: pointer; transition: background .2s; }
 .btn:hover { background: var(--c-brand-dark); }
 .btn--sm { padding: 4px var(--sp-2); font-size: var(--fs-xs); line-height: var(--lh-xs); }
+
+.btn-pill { display: inline-flex; align-items: center; gap: 6px; padding: 8px var(--sp-3); border: 0; border-radius: var(--radius-pill); font: 700 var(--fs-xs)/1 var(--font-sans); cursor: pointer; transition: background .2s, transform .2s; }
+.btn-pill--primary { background: var(--c-brand); color: #fff; }
+.btn-pill--primary:hover { background: var(--c-brand-dark); }
+.btn-pill--soft { background: var(--secondary-100); color: var(--c-brand-dark); }
+.btn-pill--soft:hover { background: #d4e8dc; }
+.btn-pill--xs { padding: 6px 14px; font-size: 12px; }
 
 .state-msg { padding: var(--sp-3); text-align: center; color: var(--c-muted); }
 .skeleton { background: linear-gradient(90deg, var(--neutral-200), var(--neutral-100), var(--neutral-200)); border-radius: var(--radius-md); min-height: 120px; }

@@ -44,10 +44,7 @@
 .potensi-card__actions { display: flex; flex-wrap: wrap; gap: var(--sp-1); margin-top: var(--sp-1); }
 
 /* tombol pill */
-.btn-pill { display: inline-flex; align-items: center; gap: var(--sp-1); padding: 8px var(--sp-3); border-radius: var(--radius-pill); font: 700 var(--fs-xs)/var(--lh-xs) var(--font-sans); transition: background .2s; }
-.btn-pill--primary { background: var(--c-brand); color: #fff; }
 .btn-pill--primary:hover { background: var(--c-brand-dark); }
-.btn-pill--soft { background: var(--secondary-100); color: var(--c-brand-dark); }
 .btn-pill--soft:hover { background: var(--secondary-200); }
 .btn-pill--white { background: #fff; color: var(--c-brand-dark); }
 .btn-pill--white:hover { background: var(--secondary-100); }
