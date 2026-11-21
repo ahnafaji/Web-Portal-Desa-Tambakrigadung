@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import "./styles/tokens.css";
 import "./styles/global.css";
 import "./styles/home.css";
+import "./styles/apbd.css";
 import "./styles/potensi.css";
 import "./styles/berita.css";
 import "./styles/umkm.css";

@@ -3,6 +3,7 @@ import Navbar from "./components/layout/Navbar.jsx";
 import Footer from "./components/layout/Footer.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import ComingSoon from "./pages/ComingSoon.jsx";
+import ApbdDetailPage from "./pages/ApbdDetailPage.jsx";
 import PotensiPage from "./pages/PotensiPage.jsx";
 import UmkmPage from "./pages/UmkmPage.jsx";
 import UmkmDetailPage from "./pages/UmkmDetailPage.jsx";
@@ -32,6 +33,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/apbd" element={<ApbdDetailPage />} />
           <Route path="/potensi" element={<PotensiPage />} />
           <Route path="/umkm" element={<UmkmPage />} />
           <Route path="/umkm/daftar" element={<UmkmDaftarPage />} />

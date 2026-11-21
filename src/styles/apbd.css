@@ -1,0 +1,231 @@
+/* Header & Breadcrumb */
+.apbd-head { margin-bottom: var(--sp-4); }
+.apbd-head__title-box {
+  border-left: 4px solid var(--c-brand-dark);
+  padding-left: var(--sp-2);
+}
+.apbd-head__title-box h1 {
+  color: var(--c-text);
+  margin-bottom: 4px;
+}
+.apbd-head__title-box p {
+  max-width: 700px;
+  font-size: var(--fs-xs);
+  line-height: 1.65;
+  color: var(--c-muted);
+}
+
+/* 3 Ringkasan Utama Card */
+.apbd-summary-grid {
+  display: grid;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.apbd-summary-card {
+  padding: var(--sp-3);
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 6px rgba(43, 40, 37, 0.08);
+}
+.apbd-summary-card__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--sp-2);
+}
+.apbd-summary-card__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--secondary-100);
+  color: var(--c-brand-dark);
+}
+.apbd-summary-card--belanja .apbd-summary-card__icon {
+  background: #f1f5f9;
+  color: #334155;
+}
+.apbd-summary-card__label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-muted);
+}
+.apbd-summary-card__amount {
+  display: block;
+  font-size: clamp(22px, 3vw, 28px);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: 6px;
+}
+.apbd-summary-card--silpa .apbd-summary-card__amount {
+  color: var(--c-brand);
+}
+.apbd-summary-card__note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--c-muted);
+}
+
+/* Rincian Pendapatan & Belanja */
+.apbd-breakdown-grid {
+  display: grid;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+.apbd-panel {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-3);
+  background: #fff;
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 6px rgba(43, 40, 37, 0.08);
+}
+.apbd-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.apbd-panel__head .section-head__text h2 {
+  font-size: var(--fs-lg);
+  color: var(--c-text);
+}
+
+.apbd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.apbd-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--neutral-200);
+  font-size: 13px;
+}
+.apbd-list__row:first-child { padding-top: 4px; }
+.apbd-list__row:last-child { border-bottom: 0; }
+.apbd-list__row span { color: var(--c-text); }
+.apbd-list__row strong {
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--c-text);
+}
+
+.apbd-panel__note {
+  margin-top: auto;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--neutral-100);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--c-muted);
+}
+.apbd-panel__note svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--c-brand-dark);
+}
+
+/* Tabel Rincian Anggaran & Realisasi */
+.apbd-table-panel__head {
+  margin-bottom: var(--sp-3);
+}
+.apbd-table-panel__head .section-head__text h2 {
+  font-size: var(--fs-lg);
+  color: var(--c-text);
+}
+.apbd-table-panel__head .section-head__text p {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.apbd-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+.apbd-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.apbd-table thead th {
+  padding: 11px 14px;
+  background: var(--neutral-100);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-muted);
+  border-bottom: 1px solid var(--neutral-200);
+}
+.apbd-table tbody td {
+  padding: 14px;
+  border-bottom: 1px solid var(--neutral-200);
+  vertical-align: middle;
+}
+.apbd-table tbody tr:hover {
+  background: rgba(245, 244, 240, 0.55);
+}
+
+.apbd-table th.is-num,
+.apbd-table td.is-num {
+  text-align: right;
+  white-space: nowrap;
+}
+.apbd-table__code {
+  font-weight: 700;
+  color: var(--c-muted);
+  width: 130px;
+}
+.apbd-table__title {
+  display: block;
+  font-size: 13px;
+  color: var(--c-text);
+}
+.apbd-table__sub {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--c-muted);
+}
+.apbd-table__pagu {
+  font-weight: 700;
+  color: var(--c-text);
+}
+.apbd-table__realisasi {
+  font-weight: 700;
+  color: var(--c-brand);
+}
+
+.apbd-table-panel__foot {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: var(--sp-3);
+  font-size: 12px;
+  color: var(--c-muted);
+}
+.apbd-table-panel__foot svg {
+  flex: none;
+  color: var(--c-brand-dark);
+}
+
+/* Responsive Breakpoints */
+@media (min-width: 768px) {
+  .apbd-summary-grid { grid-template-columns: repeat(3, 1fr); }
+  .apbd-breakdown-grid { grid-template-columns: repeat(2, 1fr); }
+  .apbd-panel,
+  .apbd-summary-card { padding: var(--sp-4); }
+}

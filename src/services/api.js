@@ -66,6 +66,7 @@ export const api = {
   getPotensi: get("/potensi?limit=3", mock.potensi),
   getPotensiPage: get("/potensi/halaman", mock.potensiPage),
   getApbd: get("/apbd", mock.apbd),
+  getApbdPage: get("/apbd/halaman", mock.apbdPage),
   getUmkm: get("/umkm?limit=3", mock.umkm),
   getUmkmPage: get("/umkm/halaman", mock.umkmPage),
   getUmkmDetail: (slug, opts) => USE_MOCK ? delay(getMockUmkmDetail(slug)) : request(`/umkm/${slug}`, opts),

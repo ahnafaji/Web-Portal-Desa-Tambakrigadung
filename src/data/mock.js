@@ -1641,3 +1641,109 @@ export const kontakPage = {
     jabatan: "Kepala Desa Tambakrigadung",
   },
 };
+
+export const apbdPage = {
+  header: {
+    judul: "Transparansi APBD Desa Tambakrigadung 2026",
+    deskripsi:
+      "Rincian Anggaran Pendapatan dan Belanja Desa (APBDes) sebagai wujud keterbukaan informasi publik dan akuntabilitas tata kelola pemerintahan desa.",
+  },
+  summary: [
+    {
+      key: "pendapatan",
+      ikon: "arrowDown",
+      label: "Total Pendapatan Desa",
+      nominal: 969000000,
+      keterangan: "Target terealisasi 100% dari penetapan APBDes murni",
+    },
+    {
+      key: "belanja",
+      ikon: "arrowUp",
+      label: "Total Belanja Desa",
+      nominal: 955050000,
+      keterangan: "Terserap untuk pembangunan fisik & pemberdayaan warga",
+    },
+    {
+      key: "silpa",
+      ikon: "wallet",
+      label: "Surplus / Sisa Lebih (SiLPA)",
+      nominal: 13950000,
+      keterangan: "Dialokasikan sebagai dana cadangan darurat & SiLPA berjalan",
+    },
+  ],
+  pendapatan: {
+    judul: "Rincian Pendapatan Desa",
+    badge: "Total Rp 969 Juta",
+    items: [
+      { sumber: "Dana Desa (DD) - APBN", nominal: 480000000 },
+      { sumber: "Alokasi Dana Desa (ADD) APBD Kab. Lamongan", nominal: 320000000 },
+      { sumber: "Pendapatan Asli Desa (PADes)", nominal: 95000000 },
+      { sumber: "Bagi Hasil Pajak & Retribusi Daerah (BHPR)", nominal: 74000000 },
+    ],
+    catatan:
+      "Komposisi pendapatan terbesar bersumber dari alokasi langsung APBN dan APBD Kabupaten.",
+  },
+  belanja: {
+    judul: "Rincian Belanja per Bidang",
+    badge: "Total Rp 955 Juta",
+    items: [
+      { bidang: "1. Pelaksanaan Pembangunan Desa", nominal: 425000000 },
+      { bidang: "2. Penyelenggaraan Pemerintahan Desa", nominal: 280000000 },
+      { bidang: "3. Pembinaan Kemasyarakatan Desa", nominal: 110050000 },
+      { bidang: "4. Pemberdayaan Masyarakat Desa", nominal: 90000000 },
+      { bidang: "5. Penanggulangan Bencana & Mendesak", nominal: 50000000 },
+    ],
+    catatan:
+      "Fokus belanja dialokasikan pada infrastruktur konektivitas pertanian & saluran drainase warga.",
+  },
+  tabel: {
+    judul: "Tabel Rincian Anggaran & Realisasi Kegiatan 2026",
+    subjudul: "Monitoring realisasi belanja per bidang dan sub-kegiatan fisik/non-fisik",
+    rows: [
+      {
+        kode: "2.2.01",
+        kegiatan: "Pembangunan & Normalisasi Saluran Irigasi Boyo",
+        detail: "Dusun Tambakboyo RT 02 / RW 01 • Padat Karya",
+        pagu: 185000000,
+        realisasi: 185000000,
+      },
+      {
+        kode: "2.2.04",
+        kegiatan: "Pengecoran Jalan Usaha Tani Blok Timur",
+        detail: "Konektivitas Jalan Pertanian Dusun Ngadung (320m)",
+        pagu: 140000000,
+        realisasi: 105000000,
+      },
+      {
+        kode: "1.1.02",
+        kegiatan: "Operasional & Insentif RT/RW/Pamong Desa",
+        detail: "Tunjangan aparatur & lembaga kemasyarakatan desa tahunan",
+        pagu: 180000000,
+        realisasi: 120000000,
+      },
+      {
+        kode: "4.3.01",
+        kegiatan: "Bantuan Langsung Tunai (BLT) Dana Desa",
+        detail: "Penyaluran bagi KPM prasejahtera triwulan I & II",
+        pagu: 72000000,
+        realisasi: 72000000,
+      },
+      {
+        kode: "3.1.05",
+        kegiatan: "Pengembangan Sentra Budidaya Perikanan",
+        detail: "Revitalisasi kolam tambak ikan air tawar & benih unggul",
+        pagu: 55000000,
+        realisasi: 22000000,
+      },
+      {
+        kode: "4.2.02",
+        kegiatan: "Pelatihan & Bantuan Sarana UMKM Binaan",
+        detail: "Fasilitasi sertifikasi halal & packaging produk kuliner lokal",
+        pagu: 35000000,
+        realisasi: 28000000,
+      },
+    ],
+    keterangan:
+      "Keterangan: Data diperbarui secara berkala per tanggal 20 Februari 2026 oleh BPD & Seksi Perencanaan Pembangunan Desa.",
+  },
+};
