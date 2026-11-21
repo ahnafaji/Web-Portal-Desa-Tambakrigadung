@@ -12,7 +12,7 @@ export default function Footer() {
           {(k) => (
             <div className="footer__grid">
               <div className="footer__brand">
-                <img src="/images/logo-kecamatan.png" alt="" className="footer__logo" />
+                <img src={`${import.meta.env.BASE_URL}images/logo-kecamatan.png`} alt="" className="footer__logo" />
                 <div>
                   <h4>{k.nama}</h4>
                   <p>{k.alamat}</p>
