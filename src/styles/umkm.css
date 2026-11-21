@@ -450,7 +450,7 @@
 .umkm-cta-strip__left h3 { font-size: var(--fs-base); }
 .umkm-cta-strip__left p { font-size: 12px; opacity: 0.88; }
 
-/* ===== Halaman Detail UMKM (/umkm/:slug) ===== */
+/* Halaman Detail UMKM (/umkm/:slug) */
 .detail-topbar {
   display: flex;
   flex-wrap: wrap;
@@ -758,7 +758,7 @@
   box-shadow: var(--shadow-card);
 }
 
-/* ===== Halaman Daftarkan Usaha (/umkm/daftar) ===== */
+/* Halaman Daftarkan Usaha (/umkm/daftar) */
 .umkm-daftar-container { max-width: 820px; }
 
 .daftar-head {
@@ -1089,7 +1089,7 @@
 .daftar-help-card__left h3 { font-size: 14px; }
 .daftar-help-card__left p { font-size: 12px; color: var(--c-muted); }
 
-/* ===== Modal Panduan Pendaftaran UMKM ===== */
+/* Modal Panduan Pendaftaran UMKM */
 .modal-backdrop {
   position: fixed;
   z-index: 100;
@@ -1188,7 +1188,7 @@
   color: var(--c-muted);
 }
 
-/* ===== Responsive Breakpoints ===== */
+/* Responsive Breakpoints */
 @media (min-width: 640px) {
   .umkm-featured__meta { grid-template-columns: repeat(3, 1fr); }
   .umkm-grid { grid-template-columns: repeat(2, 1fr); }

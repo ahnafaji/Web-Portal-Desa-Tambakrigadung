@@ -1,4 +1,4 @@
-const img = (name) => `/images/${name}`;
+const img = (name) => `${import.meta.env.BASE_URL}images/${name}`;
 const MAPS = "https://www.google.com/maps/search/?api=1&query=";
 
 export const slider = [
@@ -53,8 +53,6 @@ export const potensi = [
 ];
 
 export const apbd = { tahun: 2026, pendapatan: 969000000, pengeluaran: 955050000 };
-
-// Ganti bagian `const umkmItem = ...` & `export const umkm = ...` di src/data/mock.js dengan kode berikut:
 
 export const umkmItems = [
   {
@@ -478,8 +476,6 @@ export const umkmItems = [
   },
 ];
 
-
-
 export const umkm = umkmItems.slice(0, 3);
 
 export const umkmPage = {
@@ -605,9 +601,6 @@ export const umkmPage = {
   },
 };
 
-
-
-// Halaman Berita (/berita)
 export const beritaItems = [
   {
     id: 1,
@@ -857,10 +850,8 @@ export const beritaItems = [
   },
 ];
 
-// BeritaSection Homepage (3 berita terbaru)
 export const berita = beritaItems.slice(0, 3);
 
-// Halaman Berita (/berita) & Detail Berita (/berita/:slug)
 export const beritaPage = {
   header: {
     judul: "Kabar & Artikel Desa",
@@ -934,10 +925,6 @@ export const kontak = {
     { label: "Cek Bansos Kemensos", href: "https://cekbansos.kemensos.go.id/" },
   ],
 };
-
-
-
-// Halaman Potensi Desa (/potensi)
 
 export const potensiPage = {
   header: {
@@ -1045,9 +1032,6 @@ export const potensiPage = {
     email: "Pemdestambakrigadung@gmail.com",
   },
 };
-
-
-
 
 export const galeriItems = [
   {
@@ -1428,9 +1412,6 @@ export const galeriPage = {
   ],
   items: galeriItems,
 };
-
-
-
 
 export const kontakPage = {
   header: {

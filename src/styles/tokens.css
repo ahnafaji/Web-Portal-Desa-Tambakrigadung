@@ -20,7 +20,7 @@
   --neutral-400: #6b665e;
   --neutral-500: #2b2825;
 
-  /* ---------- Peran warna di UI ---------- */
+  /* Peran warna UI */
   --c-brand: var(--secondary-400);       /* navbar, tombol, judul hijau */
   --c-brand-dark: var(--secondary-500);  /* hover, footer, pill brand */
   --c-brand-soft: var(--secondary-300);
@@ -32,13 +32,11 @@
   --c-text: var(--neutral-500);
   --c-muted: var(--neutral-400);
 
-  /* ---------- Typography: Poppins ---------- */
+  /* Typography: */
   --font-sans: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
   --fw-regular: 400;
   --fw-bold: 700;
 
-  /* Ukuran = angka Figma di desktop. Display & Heading mengecil otomatis di layar kecil (clamp).
-     Line-height ditulis sebagai rasio dari angka Figma (mis. 72/84 = 1,167). */
   --text-display-lg: clamp(40px, 7vw, 72px);   --lh-display-lg: 1.167; /* 72 / 84 */
   --text-display-md: clamp(36px, 6vw, 64px);   --lh-display-md: 1.1875; /* 64 / 76 */
   --text-display-sm: clamp(32px, 5vw, 48px);   --lh-display-sm: 1.25;  /* 48 / 60 */
@@ -58,7 +56,7 @@
   --fs-2xl: var(--text-heading-lg); --lh-2xl: var(--lh-heading-lg);
   --fs-3xl: var(--text-display-sm); --lh-3xl: var(--lh-display-sm);
 
-  /* ---------- Spasi (Fibonacci) ---------- */
+  /* Spasi (Fibonacci) */
   --sp-1: 8px;
   --sp-2: 13px;
   --sp-3: 21px;
@@ -75,7 +73,7 @@
   --nav-h: 68px;
 }
 
-/* Kelas bantu bernama sama dengan Text Style di Figma */
+/* Kelas bantu Text Style dari Figma */
 .text-display-lg { font-size: var(--text-display-lg); line-height: var(--lh-display-lg); font-weight: var(--fw-bold); }
 .text-display-md { font-size: var(--text-display-md); line-height: var(--lh-display-md); font-weight: var(--fw-bold); }
 .text-display-sm { font-size: var(--text-display-sm); line-height: var(--lh-display-sm); font-weight: var(--fw-bold); }

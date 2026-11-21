@@ -228,7 +228,7 @@
   text-align: center;
 }
 
-/* --- Pagination --- */
+/* Pagination */
 .berita-pagination {
   display: flex;
   align-items: center;
@@ -260,7 +260,7 @@
 }
 .page-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* --- Sidebar --- */
+/* Sidebar */
 .berita-sidebar {
   display: grid;
   gap: var(--sp-3);

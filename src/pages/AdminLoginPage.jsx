@@ -62,7 +62,7 @@ export default function AdminLoginPage() {
 
           <span className="admin-version-pill">
             <span className="admin-version-pill__dot" aria-hidden="true" />
-            v2.4 Stabil
+            v1.0 Stabil
           </span>
         </header>
 
@@ -207,7 +207,7 @@ export default function AdminLoginPage() {
         </div>
 
         <footer className="admin-login-right__foot">
-          © 2026 Pemerintah Desa Tambakrigadung
+          © 2026 Pemerintah Desa Tambakrigadung. Dikembangkan bersama Mahasiswa Manajemen Informatika UNESA Angkatan 2024 (Kelompok 13).
         </footer>
       </aside>
     </div>

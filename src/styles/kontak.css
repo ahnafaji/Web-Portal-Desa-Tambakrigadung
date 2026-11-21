@@ -1,6 +1,4 @@
-/* ===== Halaman Kontak Resmi & Pusat Bantuan Warga (/kontak) ===== */
-
-/* --- Header --- */
+/* Header */
 .kontak-head { margin-bottom: var(--sp-4); }
 .kontak-head__top {
   display: flex;
@@ -39,7 +37,7 @@
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
 }
 
-/* --- 4 Kartu Saluran Komunikasi Utama --- */
+/* 4 Kartu Saluran Komunikasi Utama */
 .kontak-channels {
   display: grid;
   gap: var(--sp-2);
@@ -167,7 +165,7 @@
 }
 .channel-card__cta.is-featured:hover { background: #86efac; }
 
-/* --- Panel Direktori Pamong & SOP --- */
+/* Panel Direktori Pamong & SOP */
 .kontak-panel {
   margin-bottom: var(--sp-4);
   padding: var(--sp-3);
@@ -300,7 +298,7 @@
 .sop-card h3 { font-size: 14px; margin-bottom: 4px; }
 .sop-card p { font-size: 12px; line-height: 1.55; color: var(--c-muted); }
 
-/* --- Workspace 2 Kolom: Form Pengaduan + Sidebar --- */
+/* Workspace 2 Kolom: Form Pengaduan + Sidebar */
 .kontak-workspace {
   display: grid;
   gap: var(--sp-3);
@@ -392,7 +390,7 @@
 .tiket-box__row strong { font-size: 18px; color: var(--c-brand-dark); }
 .tiket-box small { font-size: 11px; color: var(--c-muted); }
 
-/* --- Sidebar Kanan --- */
+/* Sidebar Kanan */
 .kontak-sidebar {
   display: grid;
   gap: var(--sp-3);
@@ -484,7 +482,7 @@
   color: var(--c-text);
 }
 
-/* --- Banner Maklumat Pelayanan Publik --- */
+/* Banner Maklumat Pelayanan Publik */
 .maklumat-banner {
   display: flex;
   flex-direction: column;
@@ -533,7 +531,7 @@
 .maklumat-banner__sign strong { display: block; font-size: 13px; color: var(--c-text); }
 .maklumat-banner__sign span { font-size: 11px; color: var(--c-muted); }
 
-/* ===== Responsive Breakpoints ===== */
+/* Responsive Breakpoints */
 @media (min-width: 640px) {
   .kontak-channels { grid-template-columns: repeat(2, 1fr); }
   .pamong-grid { grid-template-columns: repeat(2, 1fr); }

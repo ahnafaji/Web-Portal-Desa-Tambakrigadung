@@ -43,7 +43,7 @@ export default function Navbar() {
         {/* Pertahankan desain logo & tulisan Desa Tambakrigadung */}
         <Link to="/" className="navbar__brand" onClick={() => setOpen(false)}>
           <img
-            src="/images/logo-kecamatan.png"
+            src={`${import.meta.env.BASE_URL}images/logo-kecamatan.png`}
             alt="Logo Desa Tambakrigadung"
             className="navbar__logo"
           />
@@ -64,7 +64,6 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* Bagian Kanan: Tombol Akun / Login Admin */}
         <div className="navbar__actions" ref={accountRef}>
           {isAuthenticated ? (
             <div className="navbar-account">
@@ -128,7 +127,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Menu Mobile */}
         {open && (
           <nav className="navbar__mobile" aria-label="Menu mobile">
             {MENU_ITEMS.map((item) => (

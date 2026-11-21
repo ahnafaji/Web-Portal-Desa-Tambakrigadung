@@ -1,6 +1,4 @@
-/* ===== Halaman Katalog Galeri & Detail Dokumentasi ===== */
-
-/* --- Header Halaman Galeri --- */
+/* Header Galeri */
 .galeri-head { margin-bottom: var(--sp-3); }
 .galeri-head__top {
   display: flex;
@@ -44,13 +42,13 @@
 }
 .galeri-stat-card span { font-size: 11px; color: var(--c-muted); }
 
-/* --- Filter Chips Tengah --- */
+/* Filter Chips */
 .galeri-chips {
   justify-content: center;
   margin: var(--sp-3) 0 var(--sp-4);
 }
 
-/* --- Grid Kartu Galeri 3 Kolom --- */
+/* Grid Galeri Card 3 Kolom */
 .galeri-grid {
   display: grid;
   gap: var(--sp-3);
@@ -130,7 +128,7 @@
   color: var(--c-muted);
 }
 
-/* ===== Halaman Detail Galeri (/galeri/:slug) ===== */
+/* Detail Galeri (/galeri/:slug) */
 .galeri-detail-box {
   padding: var(--sp-3);
   background: #fff;
@@ -414,7 +412,7 @@
 }
 .galeri-share-pill--light:hover { background: var(--secondary-100); }
 
-/* ===== Responsive Breakpoints ===== */
+/* Responsive Breakpoints */
 @media (min-width: 640px) {
   .galeri-grid { grid-template-columns: repeat(2, 1fr); }
   .galeri-metrics { grid-template-columns: repeat(3, 1fr); }
