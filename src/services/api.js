@@ -95,4 +95,28 @@ export const api = {
      const json = await res.json();
      return json && json.data !== undefined ? json.data : json;
    },
+  loginAdmin: async ({ email, password }) => {
+     if (USE_MOCK) {
+       await delay(null, 550);
+       if (!email.trim() || !password.trim()) {
+         throw new Error("Email/username dan kata sandi wajib diisi.");
+       }
+       return {
+         token: "mock-jwt-token-tambakrigadung-2026",
+         user: {
+           nama: "Operator Pemdes Tambakrigadung",
+           email: email.includes("@") ? email : "admin@tambakrigadung.desa.id",
+           role: "operator_desa",
+         },
+       };
+     }
+     const res = await fetch(`${BASE_URL}/auth/login`, {
+       method: "POST",
+       headers: { "Content-Type": "application/json", Accept: "application/json" },
+       body: JSON.stringify({ email, password }),
+     });
+     const json = await res.json().catch(() => ({}));
+     if (!res.ok) throw new Error(json.message || "Email atau kata sandi salah.");
+     return json.data !== undefined ? json.data : json;
+   },
 };
