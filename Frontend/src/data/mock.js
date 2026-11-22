@@ -21,15 +21,6 @@ export const statistik = [
 export const profil = {
   sejarah:
     "Desa Tambakrigadung merupakan salah satu desa yang berada di wilayah Kecamatan Tikung, Kabupaten Lamongan, Provinsi Jawa Timur. Perjalanan pemerintahan desa mengalami beberapa pergantian kepemimpinan dari masa ke masa.",
-  kepalaDesa: [
-    { urutan: 1, nama: "Asikin Demang", periode: "1932 - 1965" },
-    { urutan: 2, nama: "Supardi", periode: "1966 - 1990" },
-    { urutan: 3, nama: "Supardi", periode: "1990 - 1998" },
-    { urutan: 4, nama: "H. Baris", periode: "1998 - 2007" },
-    { urutan: 5, nama: "H. Baris", periode: "2007 - 2013" },
-    { urutan: 6, nama: "Mugiharto", periode: "2013 - 2019" },
-    { urutan: 7, nama: "Moch. Takim", periode: "2019 - Sekarang" },
-  ],
   visi: "Terwujudnya Desa Tambakrigadung Yang Mandiri, Berdaya Saing, Agamis, dan Berketahanan Iklim Berbasis Gotong Royong.",
   misi: [
     "Meningkatkan Kualitas Tata Kelola Pemerintahan Desa. Mewujudkan pelayanan publik yang transparan, akuntabel, cepat, dan berbasis digital untuk kemudahan administrasi masyarakat.",

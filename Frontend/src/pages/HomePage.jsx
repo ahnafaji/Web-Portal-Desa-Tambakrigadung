@@ -2,6 +2,7 @@ import HeroSlider from "../components/home/HeroSlider.jsx";
 import StatsSection from "../components/home/StatsSection.jsx";
 import ProfilSection from "../components/home/ProfilSection.jsx";
 import SambutanSection from "../components/home/SambutanSection.jsx";
+import StrukturPemerintahanSection from "../components/home/StrukturPemerintahanSection.jsx";
 import PotensiSection from "../components/home/PotensiSection.jsx";
 import ApbdSection from "../components/home/ApbdSection.jsx";
 import UmkmSection from "../components/home/UmkmSection.jsx";
@@ -14,6 +15,10 @@ export default function HomePage() {
       <StatsSection />
       <ProfilSection />
       <SambutanSection />
+      <StrukturPemerintahanSection
+        fotoKades="/images/kades.jpg"
+        baganImage="/images/bagan-struktur-pemerintah-desa.png"
+      />
       <PotensiSection />
       <ApbdSection />
       <UmkmSection />

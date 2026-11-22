@@ -4,6 +4,7 @@ import { api } from "../../services/api.js";
 import useFetch from "../../hooks/useFetch.js";
 import AsyncBlock from "../common/AsyncBlock.jsx";
 import { formatRupiah } from "../../utils/format.js";
+import ApbdLogoIllustration from "./ApbdLogoIllustration.jsx";
 
 export default function ApbdSection() {
   const state = useFetch(api.getApbd);
@@ -13,7 +14,9 @@ export default function ApbdSection() {
         <AsyncBlock state={state} minHeight={240}>
           {(a) => (
             <div className="apbd">
-              <div className="apbd__icon" aria-hidden="true">ICON APBD</div>
+              <div className="apbd__icon">
+                <ApbdLogoIllustration />
+              </div>
               <div>
                 <h2 className="section-title section-title--green" style={{ fontSize: "var(--fs-xl)" }}>APBD Desa Tambakrigadung {a.tahun}</h2>
                 <p>Akses transparansi terhadap APB Desa serta proyek pembangunan</p>

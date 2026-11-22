@@ -2,8 +2,24 @@ import * as mock from "../data/mock.js";
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+const APP_BASE_URL = import.meta.env.BASE_URL;
 
 const delay = (data, ms = 300) => new Promise((resolve) => setTimeout(() => resolve(data), ms));
+
+function resolveImagePaths(value) {
+  if (typeof value === "string") {
+    return value.startsWith("/images/")
+      ? `${APP_BASE_URL}${value.slice(1)}`
+      : value;
+  }
+  if (Array.isArray(value)) return value.map(resolveImagePaths);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, child]) => [key, resolveImagePaths(child)])
+    );
+  }
+  return value;
+}
 
 async function request(path, { signal } = {}) {
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -16,7 +32,7 @@ async function request(path, { signal } = {}) {
     throw new Error(errorJson.message || `Gagal memuat data (${res.status})`);
   }
   const json = await res.json();
-  return json && json.data !== undefined ? json.data : json;
+  return resolveImagePaths(json && json.data !== undefined ? json.data : json);
 }
 
 const get = (path, mockData) => (opts) => (USE_MOCK ? delay(mockData) : request(path, opts));

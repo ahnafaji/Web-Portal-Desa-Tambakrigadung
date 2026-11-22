@@ -23,13 +23,9 @@
   gap: 10px;
 }
 .admin-login-brand__icon {
-  display: grid;
-  place-items: center;
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-sm);
-  background: var(--secondary-100);
-  color: var(--c-brand-dark);
+  object-fit: contain;
 }
 .admin-login-brand small {
   display: block;

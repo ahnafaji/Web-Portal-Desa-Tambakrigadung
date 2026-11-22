@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Landmark, Lock, Mail, Eye, EyeOff, ArrowRight, ArrowLeft, ShieldCheck,
+  Lock, Mail, Eye, EyeOff, ArrowRight, ArrowLeft, ShieldCheck,
 } from "lucide-react";
 import { api } from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -50,9 +50,11 @@ export default function AdminLoginPage() {
       <section className="admin-login-left" aria-labelledby="login-heading">
         <header className="admin-login-topbar">
           <Link to="/" className="admin-login-brand">
-            <span className="admin-login-brand__icon">
-              <Landmark size={17} aria-hidden="true" />
-            </span>
+            <img
+              src={`${import.meta.env.BASE_URL}images/logo-kecamatan.png`}
+              alt="Logo Kecamatan Tikung"
+              className="admin-login-brand__icon"
+            />
             <div>
               <small>PORTAL RESMI</small>
               <strong>Desa Tambakrigadung</strong>
