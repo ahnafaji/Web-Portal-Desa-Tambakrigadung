@@ -1,4 +1,30 @@
 import { prisma } from "../config/prisma.js";
+import { AppError } from "../utils/AppError.js";
+import { uploadToSupabase } from "./storageService.js";
+import { checkMagicBytes } from "../middlewares/uploadValidator.js";
+
+const STAT_META = [
+  { key: "jiwa", label: "Total Jiwa", icon: "users", color: "#79a98a", urutan: 1 },
+  { key: "kk", label: "Kepala Keluarga", icon: "user", color: "#e53935", urutan: 2 },
+  { key: "laki", label: "Laki-Laki", icon: "male", color: "#3b82f6", urutan: 3 },
+  { key: "perempuan", label: "Perempuan", icon: "female", color: "#e91ee9", urutan: 4 },
+  { key: "umkm", label: "Produk UMKM", icon: "cart", color: "#2b2825", urutan: 5 },
+  { key: "potensi", label: "Potensi Desa", icon: "trophy", color: "#2b2825", urutan: 6 },
+  { key: "fasilitas", label: "Fasilitas Desa", icon: "building", color: "#2b2825", urutan: 7 },
+  { key: "aparatur", label: "Aparatur Desa", icon: "group", color: "#2b2825", urutan: 8 },
+];
+
+const ALLOWED_SOTK = ["Pimpinan", "Sekretariat", "Kaur", "Kasi", "Kasun"];
+const ALLOWED_STATUS_PERANGKAT = ["Aktif Menjabat", "Plt / Penjabat"];
+
+const sanitizeFotoUrl = (url) => {
+  const clean = String(url || "").trim();
+  if (!clean) return "";
+  if (clean.startsWith("/") || clean.startsWith("https://") || clean.startsWith("http://")) {
+    return clean;
+  }
+  throw new AppError("URL foto harus diawali '/', 'http://', atau 'https://'.", 400);
+};
 
 export const getSlider = async () => {
   return prisma.heroSlider.findMany({
@@ -11,6 +37,28 @@ export const getStatistik = async () => {
   return prisma.statistikDesa.findMany({
     orderBy: { urutan: "asc" },
   });
+};
+
+export const updateStatistik = async (payload = {}) => {
+  const ops = STAT_META.map((meta) => {
+    if (payload[meta.key] === undefined) return null;
+    const num = Number(payload[meta.key]);
+    if (!Number.isInteger(num) || num < 0) {
+      throw new AppError(`Nilai statistik "${meta.label}" harus berupa angka bulat >= 0.`, 400);
+    }
+    return prisma.statistikDesa.upsert({
+      where: { key: meta.key },
+      update: { value: num },
+      create: { ...meta, value: num },
+    });
+  }).filter(Boolean);
+
+  if (!ops.length) {
+    throw new AppError("Tidak ada data statistik yang valid untuk diperbarui.", 400);
+  }
+
+  await prisma.$transaction(ops);
+  return getStatistik();
 };
 
 export const getProfil = async () => {
@@ -26,6 +74,143 @@ export const getProfil = async () => {
     misi: profil?.misi || [],
     runningText: profil?.runningText || "",
   };
+};
+
+export const updateProfil = async (payload = {}) => {
+  const sejarah = String(payload.sejarah ?? "").trim();
+  const visi = String(payload.visi ?? "").trim();
+  const misi = Array.isArray(payload.misi)
+    ? payload.misi.map((m) => String(m ?? "").trim()).filter(Boolean)
+    : [];
+
+  if (!sejarah || !visi) {
+    throw new AppError("Sejarah desa dan visi pembangunan wajib diisi.", 400);
+  }
+  if (!misi.length) {
+    throw new AppError("Minimal harus ada 1 poin misi desa.", 400);
+  }
+
+  const existing = await prisma.profilDesa.findFirst();
+  if (existing) {
+    await prisma.profilDesa.update({
+      where: { id: existing.id },
+      data: {
+        sejarah,
+        visi,
+        misi,
+        ...(payload.runningText !== undefined
+          ? { runningText: String(payload.runningText).trim() }
+          : {}),
+      },
+    });
+  } else {
+    await prisma.profilDesa.create({
+      data: {
+        sejarah,
+        visi,
+        misi,
+        runningText:
+          String(payload.runningText || "").trim() ||
+          "Selamat Datang Di Website Resmi Pemerintah Desa Tambakrigadung, Kec. Tikung, Kab. Lamongan",
+      },
+    });
+  }
+
+  return getProfil();
+};
+
+export const getPerangkat = async () => {
+  return prisma.perangkatDesa.findMany({
+    orderBy: [{ urutan: "asc" }, { createdAt: "asc" }],
+  });
+};
+
+export const createPerangkat = async (data = {}, file = null) => {
+  const nama = String(data.nama || "").trim();
+  const jabatan = String(data.jabatan || "").trim();
+  if (!nama || !jabatan) {
+    throw new AppError("Nama lengkap dan jabatan perangkat desa wajib diisi.", 400);
+  }
+
+  let foto = null;
+  if (file) {
+    if (!checkMagicBytes(file.buffer, file.mimetype)) {
+      throw new AppError("Isi berkas foto tidak valid atau rusak.", 400);
+    }
+    foto = await uploadToSupabase(file, "perangkat");
+  } else if (data.foto) {
+    foto = sanitizeFotoUrl(data.foto) || null;
+  }
+
+  const posisiSotk = ALLOWED_SOTK.includes(data.posisiSotk) ? data.posisiSotk : "Kaur";
+  const status = ALLOWED_STATUS_PERANGKAT.includes(data.status) ? data.status : "Aktif Menjabat";
+  const count = await prisma.perangkatDesa.count();
+
+  return prisma.perangkatDesa.create({
+    data: {
+      nama,
+      nipd: String(data.nipd || "").trim() || null,
+      jabatan,
+      posisiSotk,
+      status,
+      foto,
+      urutan: Number.isInteger(Number(data.urutan)) ? Number(data.urutan) : count + 1,
+    },
+  });
+};
+
+export const updatePerangkat = async (id, data = {}, file = null) => {
+  const existing = await prisma.perangkatDesa.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Data perangkat desa tidak ditemukan.", 404);
+  }
+
+  const nama = data.nama !== undefined ? String(data.nama).trim() : existing.nama;
+  const jabatan = data.jabatan !== undefined ? String(data.jabatan).trim() : existing.jabatan;
+  if (!nama || !jabatan) {
+    throw new AppError("Nama lengkap dan jabatan perangkat desa wajib diisi.", 400);
+  }
+
+  let foto = existing.foto;
+  if (file) {
+    if (!checkMagicBytes(file.buffer, file.mimetype)) {
+      throw new AppError("Isi berkas foto tidak valid atau rusak.", 400);
+    }
+    foto = await uploadToSupabase(file, "perangkat");
+  } else if (data.removeFoto === "true" || data.removeFoto === true) {
+    foto = null;
+  } else if (data.foto !== undefined) {
+    foto = sanitizeFotoUrl(data.foto) || null;
+  }
+
+  const posisiSotk =
+    data.posisiSotk && ALLOWED_SOTK.includes(data.posisiSotk)
+      ? data.posisiSotk
+      : existing.posisiSotk;
+  const status =
+    data.status && ALLOWED_STATUS_PERANGKAT.includes(data.status)
+      ? data.status
+      : existing.status;
+
+  return prisma.perangkatDesa.update({
+    where: { id },
+    data: {
+      nama,
+      nipd: data.nipd !== undefined ? String(data.nipd).trim() || null : existing.nipd,
+      jabatan,
+      posisiSotk,
+      status,
+      foto,
+    },
+  });
+};
+
+export const deletePerangkat = async (id) => {
+  const existing = await prisma.perangkatDesa.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Data perangkat desa tidak ditemukan.", 404);
+  }
+  return prisma.perangkatDesa.delete({ where: { id } });
 };
 
 export const getSambutan = async () => {
