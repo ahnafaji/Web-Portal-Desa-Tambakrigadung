@@ -5,7 +5,9 @@ const getToken = () => {
   if (directToken) return directToken;
 
   try {
-    const authData = localStorage.getItem('tambakrigadung_admin_auth') || sessionStorage.getItem('tambakrigadung_admin_auth');
+    const authData =
+      localStorage.getItem('tambakrigadung_admin_auth') ||
+      sessionStorage.getItem('tambakrigadung_admin_auth');
     if (authData) {
       const parsed = JSON.parse(authData);
       return parsed?.token || '';
@@ -25,7 +27,7 @@ async function request(endpoint, { method = 'GET', body, isFormData = false } = 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method,
     headers,
-    credentials: 'include', // Kirim HttpOnly cookies ke backend
+    credentials: 'include',
     body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
 
@@ -47,8 +49,14 @@ export const adminApi = {
   deletePengaduan: (id) => request(`/pengaduan/${id}`, { method: 'DELETE' }),
 
   // UMKM
-  getUmkm: (params = '') => request(`/umkm${params ? `?${params}` : ''}`),
-  getUmkmById: (id) => request(`/umkm/${id}`),
+  getUmkm: (params = '') => {
+    const query = params ? `admin=true&${params}` : 'admin=true';
+    return request(`/umkm?${query}`);
+  },
+  getUmkmById: async (id) => {
+    const data = await request(`/umkm/${id}`);
+    return data?.item ? data.item : data;
+  },
   createUmkm: (formData) => request('/umkm', { method: 'POST', body: formData, isFormData: true }),
   updateUmkm: (id, formData) =>
     request(`/umkm/${id}`, { method: 'PUT', body: formData, isFormData: true }),

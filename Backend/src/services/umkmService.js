@@ -6,7 +6,7 @@ import { uploadToSupabase } from "./storageService.js";
 const mapStatusToDb = (status) => {
   if (!status) return undefined;
   const s = status.toLowerCase();
-  if (s === "menunggu" || s === "pending") return "PENDING";
+  if (s === "menunggu" || s === "pending" || s === "draft" || s === "draf") return "PENDING";
   if (s === "aktif" || s === "approved") return "APPROVED";
   if (s === "ditolak" || s === "rejected") return "REJECTED";
   return status.toUpperCase();
@@ -53,7 +53,7 @@ const formatUmkmItem = (u) => {
   }
   if (!petunjukArahObj || typeof petunjukArahObj !== "object") {
     petunjukArahObj = {
-      deskripsi: u.patokanLokasi || `Berada di wilayah ${u.dusun || 'Desa Tambakrigadung'}, akses jalan desa mudah dijangkau.`,
+      deskripsi: u.patokanLokasi || `Berada di wilayah ${u.dusun || "Desa Tambakrigadung"}, akses jalan desa mudah dijangkau.`,
       fasilitas: ["Parkir Kendaraan", "Akses Jalan Utama", "Pelayanan Ramah"],
     };
   }
@@ -61,8 +61,16 @@ const formatUmkmItem = (u) => {
     petunjukArahObj.fasilitas = ["Parkir Kendaraan", "Akses Jalan Utama"];
   }
 
-  const defaultMapsHref = u.mapsHref || (u.alamat ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${u.nama} ${u.alamat} Tambakrigadung Tikung Lamongan`)}` : "https://maps.google.com");
-  const defaultEmbed = u.mapEmbedUrl || "https://www.google.com/maps?q=Tambakrigadung,+Tikung,+Lamongan+Regency,+East+Java&output=embed";
+  const defaultMapsHref =
+    u.mapsHref ||
+    (u.alamat
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${u.nama} ${u.alamat} Tambakrigadung Tikung Lamongan`
+      )}`
+      : "https://maps.google.com");
+  const defaultEmbed =
+    u.mapEmbedUrl ||
+    "https://www.google.com/maps?q=Tambakrigadung,+Tikung,+Lamongan+Regency,+East+Java&output=embed";
 
   return {
     id: u.id,
@@ -81,14 +89,19 @@ const formatUmkmItem = (u) => {
     jamOperasional: u.jamOperasional || "Setiap Hari, 08.00 – 17.00 WIB",
     dusun: u.dusun || "Desa Tambakrigadung",
     alamat: u.alamat || "Desa Tambakrigadung, Kec. Tikung, Kab. Lamongan",
-    patokanLokasi: u.patokanLokasi || `${u.dusun || 'Desa Tambakrigadung'} (Akses Jalan Utama)`,
+    patokanLokasi: u.patokanLokasi || `${u.dusun || "Desa Tambakrigadung"} (Akses Jalan Utama)`,
     pembayaran: u.pembayaran || "Tunai / Transfer",
-    hargaLabel: u.hargaLabel || (min && max ? `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}` : "Harga Menyesuaikan"),
+    hargaLabel:
+      u.hargaLabel ||
+      (min && max
+        ? `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}`
+        : "Harga Menyesuaikan"),
     hargaSatuan: u.hargaSatuan || "/ porsi",
     hargaBadge: u.hargaBadge || null,
     hargaMulai: u.hargaMulai || (min ? `Rp ${min.toLocaleString("id-ID")}` : "Menyesuaikan"),
     hargaMin: min,
     hargaMax: max,
+    rawMapsUrl: u.mapsHref || "",
     mapsUrl: defaultMapsHref,
     mapsHref: defaultMapsHref,
     mapEmbedUrl: defaultEmbed,
@@ -123,7 +136,6 @@ export const getUmkmList = async ({ limit, kategori, status, q }) => {
   if (status && status !== "Semua") {
     where.status = mapStatusToDb(status);
   } else {
-    // If not specified by admin, default to APPROVED for public
     where.status = "APPROVED";
   }
 
@@ -222,22 +234,22 @@ export const getUmkmPage = async () => {
     ],
     featured: featured
       ? {
-          slug: featured.slug,
-          badge: "KARYA PILIHAN BUMDES BOYO MAKMUR",
-          judul: featured.nama,
-          deskripsi: featured.ringkasan,
-          info: [
-            { label: "Perajin Utama", value: featured.pemilik },
-            { label: "Lokasi Sentra", value: featured.dusun },
-            { label: "Status Buka", value: featured.statusBuka || "Setiap Hari" },
-          ],
-          hargaLabel: featured.hargaBadge || "Harga Mulai Terjangkau",
-          harga: featured.hargaMulai || "Sesuai Pesanan",
-          hargaSatuan: featured.hargaSatuan || "",
-          whatsapp: featured.whatsapp,
-          image: featured.image,
-          imageCaption: `Katalog Pesona Desa · Karya ${featured.pemilik}`,
-        }
+        slug: featured.slug,
+        badge: "KARYA PILIHAN BUMDES BOYO MAKMUR",
+        judul: featured.nama,
+        deskripsi: featured.ringkasan,
+        info: [
+          { label: "Perajin Utama", value: featured.pemilik },
+          { label: "Lokasi Sentra", value: featured.dusun },
+          { label: "Status Buka", value: featured.statusBuka || "Setiap Hari" },
+        ],
+        hargaLabel: featured.hargaBadge || "Harga Mulai Terjangkau",
+        harga: featured.hargaMulai || "Sesuai Pesanan",
+        hargaSatuan: featured.hargaSatuan || "",
+        whatsapp: featured.whatsapp,
+        image: featured.image,
+        imageCaption: `Katalog Pesona Desa · Karya ${featured.pemilik}`,
+      }
       : null,
     items,
     dusunSentra: {
@@ -349,26 +361,40 @@ export const createUmkm = async (data, files = []) => {
   const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
   const cleanWa = (data.whatsapp || data.telepon || "").replace(/\D/g, "");
-  const normalizedWa = cleanWa.startsWith("0") ? `62${cleanWa.slice(1)}` : cleanWa.startsWith("62") ? cleanWa : `62${cleanWa}`;
+  const normalizedWa = cleanWa.startsWith("0")
+    ? `62${cleanWa.slice(1)}`
+    : cleanWa.startsWith("62")
+      ? cleanWa
+      : `62${cleanWa}`;
 
   const statusDb = mapStatusToDb(data.status) || "APPROVED";
+  const minVal = data.hargaMin ? parseFloat(String(data.hargaMin).replace(/\D/g, "")) : null;
+  const maxVal = data.hargaMax ? parseFloat(String(data.hargaMax).replace(/\D/g, "")) : null;
 
   const created = await prisma.umkm.create({
     data: {
       slug,
       nama: data.namaUsaha || data.nama,
-      kategori: data.kategori || "pangan",
+      kategori: data.kategori || "Kuliner",
       kategoriLabel: data.kategori || "Kuliner & Kudapan",
       badgeUtama: "USAHA WARGA",
       jamOperasional: data.jamOperasional || "Setiap Hari",
       statusBuka: data.jamOperasional ? `Buka (${data.jamOperasional})` : "Buka",
-      dusun: data.dusun || (data.alamat && data.alamat.includes("Dusun") ? data.alamat.split(",")[0] : "Desa Tambakrigadung"),
+      dusun:
+        data.dusun ||
+        (data.alamat && data.alamat.includes("Dusun") ? data.alamat.split(",")[0] : "Desa Tambakrigadung"),
       alamat: data.alamat,
       pemilik: data.pemilik || data.namaPemilik,
       whatsapp: normalizedWa,
-      hargaMin: data.hargaMin ? parseFloat(String(data.hargaMin).replace(/\D/g, "")) : null,
-      hargaMax: data.hargaMax ? parseFloat(String(data.hargaMax).replace(/\D/g, "")) : null,
-      hargaLabel: data.hargaMin && data.hargaMax ? `Rp ${data.hargaMin} – Rp ${data.hargaMax}` : "Harga Menyesuaikan",
+      hargaMin: minVal,
+      hargaMax: maxVal,
+      hargaLabel:
+        minVal && maxVal
+          ? `Rp ${minVal.toLocaleString("id-ID")} – Rp ${maxVal.toLocaleString("id-ID")}`
+          : minVal
+            ? `Mulai Rp ${minVal.toLocaleString("id-ID")}`
+            : "Harga Menyesuaikan",
+      hargaMulai: minVal ? `Rp ${minVal.toLocaleString("id-ID")}` : "Menyesuaikan",
       image: photoUrls[0] || data.foto || "/images/hero-1.jpg",
       galeri: photoUrls.length ? photoUrls : data.foto ? [data.foto] : ["/images/hero-1.jpg"],
       ringkasan: (data.deskripsi || "").slice(0, 150) + ((data.deskripsi || "").length > 150 ? "..." : ""),
@@ -390,10 +416,12 @@ export const updateUmkm = async (id, data, files = []) => {
 
   let photoUrls = existing.galeri || [];
   if (files && files.length > 0) {
+    const newUrls = [];
     for (const file of files) {
       const url = await uploadToSupabase(file, "umkm");
-      photoUrls.push(url);
+      newUrls.push(url);
     }
+    photoUrls = [...newUrls, ...photoUrls];
   }
 
   const updatePayload = {};
@@ -405,22 +433,59 @@ export const updateUmkm = async (id, data, files = []) => {
   if (data.pemilik || data.namaPemilik) updatePayload.pemilik = data.pemilik || data.namaPemilik;
   if (data.whatsapp || data.telepon) {
     const cleanWa = (data.whatsapp || data.telepon).replace(/\D/g, "");
-    updatePayload.whatsapp = cleanWa.startsWith("0") ? `62${cleanWa.slice(1)}` : cleanWa.startsWith("62") ? cleanWa : `62${cleanWa}`;
+    updatePayload.whatsapp = cleanWa.startsWith("0")
+      ? `62${cleanWa.slice(1)}`
+      : cleanWa.startsWith("62")
+        ? cleanWa
+        : `62${cleanWa}`;
   }
-  if (data.jamOperasional !== undefined) updatePayload.jamOperasional = data.jamOperasional;
-  if (data.alamat) updatePayload.alamat = data.alamat;
+  if (data.jamOperasional !== undefined) {
+    updatePayload.jamOperasional = data.jamOperasional;
+    updatePayload.statusBuka = data.jamOperasional ? `Buka (${data.jamOperasional})` : "Buka";
+  }
+  if (data.alamat) {
+    updatePayload.alamat = data.alamat;
+    if (!data.dusun && data.alamat.includes("Dusun")) {
+      updatePayload.dusun = data.alamat.split(",")[0].trim();
+    }
+  }
   if (data.dusun) updatePayload.dusun = data.dusun;
-  if (data.mapsUrl !== undefined) updatePayload.mapsHref = data.mapsUrl;
+  if (data.mapsUrl !== undefined) updatePayload.mapsHref = data.mapsUrl || null;
   if (data.deskripsi) {
-    updatePayload.ringkasan = data.deskripsi.slice(0, 150) + (data.deskripsi.length > 150 ? "..." : "");
+    updatePayload.ringkasan =
+      data.deskripsi.slice(0, 150) + (data.deskripsi.length > 150 ? "..." : "");
     updatePayload.deskripsiLengkap = [data.deskripsi];
   }
-  if (data.hargaMin !== undefined) {
-    updatePayload.hargaMin = data.hargaMin ? parseFloat(String(data.hargaMin).replace(/\D/g, "")) : null;
+
+  const nextMin =
+    data.hargaMin !== undefined
+      ? data.hargaMin
+        ? parseFloat(String(data.hargaMin).replace(/\D/g, ""))
+        : null
+      : existing.hargaMin
+        ? Number(existing.hargaMin)
+        : null;
+  const nextMax =
+    data.hargaMax !== undefined
+      ? data.hargaMax
+        ? parseFloat(String(data.hargaMax).replace(/\D/g, ""))
+        : null
+      : existing.hargaMax
+        ? Number(existing.hargaMax)
+        : null;
+
+  if (data.hargaMin !== undefined) updatePayload.hargaMin = nextMin;
+  if (data.hargaMax !== undefined) updatePayload.hargaMax = nextMax;
+  if (data.hargaMin !== undefined || data.hargaMax !== undefined) {
+    updatePayload.hargaLabel =
+      nextMin && nextMax
+        ? `Rp ${nextMin.toLocaleString("id-ID")} – Rp ${nextMax.toLocaleString("id-ID")}`
+        : nextMin
+          ? `Mulai Rp ${nextMin.toLocaleString("id-ID")}`
+          : "Harga Menyesuaikan";
+    updatePayload.hargaMulai = nextMin ? `Rp ${nextMin.toLocaleString("id-ID")}` : "Menyesuaikan";
   }
-  if (data.hargaMax !== undefined) {
-    updatePayload.hargaMax = data.hargaMax ? parseFloat(String(data.hargaMax).replace(/\D/g, "")) : null;
-  }
+
   if (data.status) {
     updatePayload.status = mapStatusToDb(data.status);
   }
@@ -439,6 +504,17 @@ export const updateUmkm = async (id, data, files = []) => {
 };
 
 export const deleteUmkm = async (id) => {
+  const existing = await prisma.umkm.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Data UMKM tidak ditemukan.", 404);
+  }
+
+  // Bersihkan relasi menu terlebih dahulu agar aman dari foreign key constraint
+  await prisma.umkm.update({
+    where: { id },
+    data: { menus: { deleteMany: {} } },
+  });
+
   return prisma.umkm.delete({ where: { id } });
 };
 
@@ -472,7 +548,11 @@ export const registerUmkmPublic = async (data, files) => {
   const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
   const cleanWa = data.whatsapp.replace(/\D/g, "");
-  const normalizedWa = cleanWa.startsWith("0") ? `62${cleanWa.slice(1)}` : cleanWa.startsWith("62") ? cleanWa : `62${cleanWa}`;
+  const normalizedWa = cleanWa.startsWith("0")
+    ? `62${cleanWa.slice(1)}`
+    : cleanWa.startsWith("62")
+      ? cleanWa
+      : `62${cleanWa}`;
 
   const created = await prisma.umkm.create({
     data: {
@@ -489,7 +569,8 @@ export const registerUmkmPublic = async (data, files) => {
       whatsapp: normalizedWa,
       hargaMin: data.hargaMin ? parseFloat(data.hargaMin.replace(/\D/g, "")) : null,
       hargaMax: data.hargaMax ? parseFloat(data.hargaMax.replace(/\D/g, "")) : null,
-      hargaLabel: data.hargaMin && data.hargaMax ? `Rp ${data.hargaMin} – Rp ${data.hargaMax}` : "Harga Menyesuaikan",
+      hargaLabel:
+        data.hargaMin && data.hargaMax ? `Rp ${data.hargaMin} – Rp ${data.hargaMax}` : "Harga Menyesuaikan",
       image: photoUrls[0],
       galeri: photoUrls,
       ringkasan: data.deskripsi.slice(0, 150) + (data.deskripsi.length > 150 ? "..." : ""),

@@ -4,8 +4,7 @@ import { logAudit } from "../middlewares/auditLogger.js";
 
 export const getUmkmList = async (req, res, next) => {
   try {
-    // If authenticated admin or status param passed, use getAdminUmkmList
-    if (req.user || req.query.status) {
+    if (req.user || req.query.status || req.query.admin === "true") {
       const data = await umkmService.getAdminUmkmList(req.query);
       return sendResponse(res, 200, "Katalog UMKM berhasil dimuat.", data);
     }
