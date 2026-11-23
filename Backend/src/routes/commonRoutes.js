@@ -4,6 +4,7 @@ import { authenticate, authorize } from "../middlewares/auth.js";
 import { uploadImagesOnly } from "../middlewares/uploadValidator.js";
 
 const router = Router();
+// Rute publik & admin: slider, statistik, profil, perangkat desa, potensi, dan kontak
 const adminGuard = [authenticate, authorize("SUPER_ADMIN", "OPERATOR_DESA")];
 
 router.get("/slider", commonController.getSlider);
