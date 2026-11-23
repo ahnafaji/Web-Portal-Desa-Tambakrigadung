@@ -26,7 +26,7 @@ import ApbdAdminPage from "./pages/admin/ApbdAdminPage.jsx";
 import BeritaAdminPage from "./pages/admin/BeritaAdminPage.jsx";
 import BeritaFormPage from "./pages/admin/BeritaFormPage.jsx";
 import DataKependudukanAdminPage from "./pages/admin/DataKependudukanAdminPage.jsx";
-import PotensiAdminPage from "./pages/admin/PotensiAdminPage.jsx";
+import PotensiAdminPage from "./pages/PotensiAdminPage.jsx";
 import ProfilPerangkatAdminPage from "./pages/admin/ProfilPerangkatAdminPage.jsx";
 
 export default function App() {
