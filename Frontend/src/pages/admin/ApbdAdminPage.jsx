@@ -11,8 +11,11 @@ import {
   Pencil,
   Trash2,
   X,
+  AlertCircle,
 } from 'lucide-react';
-import { adminApi } from '../../services/adminapi';
+import { adminApi } from '../../services/adminApi';
+import { useAdminToast } from '../../context/AdminToastContext';
+import AdminConfirmModal from '../../components/admin/AdminConfirmModal';
 
 const formatRupiah = (num) =>
   new Intl.NumberFormat('id-ID', {
@@ -22,21 +25,26 @@ const formatRupiah = (num) =>
   }).format(num || 0);
 
 export default function ApbdAdminPage() {
+  const toast = useAdminToast();
   const [tahunList, setTahunList] = useState(['2026', '2025']);
   const [tahun, setTahun] = useState('2026');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [activeTab, setActiveTab] = useState('Belanja');
   const [search, setSearch] = useState('');
   const [showOnHome, setShowOnHome] = useState(true);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [pdfMeta, setPdfMeta] = useState({
     name: 'Dokumen_APBDes_Tambakrigadung_2026.pdf',
     size: '2.4 MB',
     updated: 'Diperbarui 15 Jan 2026 • Format Salinan Keputusan BPD',
   });
 
+  // Modal Tambah/Edit
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [formModal, setFormModal] = useState({
     jenis: 'Belanja',
     kode: '',
@@ -46,31 +54,51 @@ export default function ApbdAdminPage() {
     realisasi: '',
   });
 
+  // Modal Konfirmasi Hapus
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   useEffect(() => {
+    let active = true;
     setLoading(true);
+    setPageError('');
+
     adminApi
       .getApbd(tahun)
       .then((res) => {
+        if (!active) return;
         if (Array.isArray(res)) setItems(res);
         else if (res && Array.isArray(res.items)) setItems(res.items);
         else setItems([]);
       })
       .catch((err) => {
-        console.error('Gagal memuat pos APBD:', err);
-        setItems([]);
+        if (active) {
+          setPageError(err.message || 'Gagal memuat rincian pos APBD.');
+          setItems([]);
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [tahun]);
 
-  const yearItems = useMemo(() => items.filter((i) => i.tahun === tahun), [items, tahun]);
+  const yearItems = useMemo(
+    () => items.filter((i) => String(i.tahun ?? tahun) === String(tahun)),
+    [items, tahun]
+  );
 
   const totals = useMemo(() => {
     const pendapatan = yearItems
       .filter((i) => i.jenis === 'Pendapatan')
-      .reduce((s, i) => s + Number(i.anggaran), 0);
+      .reduce((s, i) => s + Number(i.anggaran || 0), 0);
     const belanja = yearItems
       .filter((i) => i.jenis === 'Belanja')
-      .reduce((s, i) => s + Number(i.anggaran), 0);
+      .reduce((s, i) => s + Number(i.anggaran || 0), 0);
     return {
       pendapatan,
       belanja,
@@ -83,18 +111,21 @@ export default function ApbdAdminPage() {
       const matchTab = i.jenis === activeTab;
       const q = search.toLowerCase();
       const matchQuery =
-        !q || i.kode.toLowerCase().includes(q) || i.uraian.toLowerCase().includes(q);
+        !q ||
+        String(i.kode || '').toLowerCase().includes(q) ||
+        String(i.uraian || '').toLowerCase().includes(q);
       return matchTab && matchQuery;
     });
   }, [yearItems, activeTab, search]);
 
-  const tabTotalAnggaran = visibleRows.reduce((s, i) => s + Number(i.anggaran), 0);
-  const tabTotalRealisasi = visibleRows.reduce((s, i) => s + Number(i.realisasi), 0);
+  const tabTotalAnggaran = visibleRows.reduce((s, i) => s + Number(i.anggaran || 0), 0);
+  const tabTotalRealisasi = visibleRows.reduce((s, i) => s + Number(i.realisasi || 0), 0);
 
   const handleAddYear = () => {
     const nextYear = String(Math.max(...tahunList.map(Number)) + 1);
     setTahunList((prev) => [nextYear, ...prev]);
     setTahun(nextYear);
+    toast.info(`Tahun anggaran ${nextYear} ditambahkan. Silakan tambah rincian pos.`, 'Tahun Baru');
   };
 
   const openModal = (item = null) => {
@@ -102,27 +133,28 @@ export default function ApbdAdminPage() {
     setFormModal(
       item
         ? {
-            jenis: item.jenis,
-            kode: item.kode,
-            uraian: item.uraian,
-            keterangan: item.keterangan,
-            anggaran: String(item.anggaran),
-            realisasi: String(item.realisasi),
-          }
+          jenis: item.jenis,
+          kode: item.kode || '',
+          uraian: item.uraian || '',
+          keterangan: item.keterangan || '',
+          anggaran: String(item.anggaran ?? ''),
+          realisasi: String(item.realisasi ?? ''),
+        }
         : {
-            jenis: activeTab,
-            kode: '',
-            uraian: '',
-            keterangan: '',
-            anggaran: '',
-            realisasi: '',
-          }
+          jenis: activeTab,
+          kode: '',
+          uraian: '',
+          keterangan: '',
+          anggaran: '',
+          realisasi: '',
+        }
     );
     setModalOpen(true);
   };
 
   const handleSaveRincian = async (e) => {
     e.preventDefault();
+    setSaving(true);
     const payload = {
       ...formModal,
       tahun,
@@ -136,39 +168,70 @@ export default function ApbdAdminPage() {
         setItems((prev) =>
           prev.map((i) => (i.id === editingItem.id ? { ...i, ...updated, ...payload } : i))
         );
+        toast.success(`Pos "${payload.uraian}" berhasil diperbarui.`, 'Rincian APBD Diperbarui');
       } else {
         const created = await adminApi.createApbdItem(payload);
         if (created) {
-          setItems((prev) => [...prev, created]);
+          setItems((prev) => [...prev, { ...payload, ...created }]);
         }
+        toast.success(`Pos "${payload.uraian}" berhasil ditambahkan.`, 'Rincian APBD Ditambahkan');
       }
       setModalOpen(false);
     } catch (err) {
-      alert(err.message || 'Gagal menyimpan pos rincian APBD.');
+      toast.error(err.message || 'Gagal menyimpan pos rincian APBD.', 'Gagal Menyimpan');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Hapus pos rincian anggaran ini?')) return;
+  const openDeleteModal = (row) => {
+    setDeleteError('');
+    setDeleteTarget(row);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteError('');
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
     try {
-      await adminApi.deleteApbdItem(id);
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      const targetName = deleteTarget.uraian;
+      await adminApi.deleteApbdItem(deleteTarget.id);
+      setItems((prev) => prev.filter((i) => i.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast.success(`Pos anggaran "${targetName}" berhasil dihapus.`, 'Rincian APBD Dihapus');
     } catch (err) {
-      alert(err.message || 'Gagal menghapus pos rincian APBD.');
+      setDeleteError(err.message || 'Gagal menghapus pos rincian APBD.');
+    } finally {
+      setDeleting(false);
     }
   };
 
   const handlePdfChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const fd = new FormData();
-    fd.append('dokumen', file);
-    await adminApi.uploadApbdPdf(tahun, fd).catch(() => {});
-    setPdfMeta({
-      name: file.name,
-      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      updated: 'Baru saja diperbarui • Format Salinan Keputusan BPD',
-    });
+    setUploadingPdf(true);
+    try {
+      const fd = new FormData();
+      fd.append('dokumen', file);
+      await adminApi.uploadApbdPdf(tahun, fd);
+      setPdfMeta({
+        name: file.name,
+        size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        updated: 'Baru saja diperbarui • Format Salinan Keputusan BPD',
+      });
+      toast.success(`Dokumen "${file.name}" berhasil diunggah.`, 'PDF APBDes Diperbarui');
+    } catch (err) {
+      toast.error(err.message || 'Gagal mengunggah dokumen PDF APBDes.', 'Gagal Mengunggah');
+    } finally {
+      setUploadingPdf(false);
+      e.target.value = '';
+    }
   };
 
   return (
@@ -204,6 +267,27 @@ export default function ApbdAdminPage() {
           </button>
         </div>
       </div>
+
+      {pageError && (
+        <div
+          role="alert"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            borderRadius: '10px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#b91c1c',
+            fontSize: '0.9rem',
+          }}
+        >
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{pageError}</span>
+        </div>
+      )}
 
       {/* Ringkasan Anggaran Card */}
       <div className="admin-grid-3">
@@ -262,8 +346,14 @@ export default function ApbdAdminPage() {
         <div className="admin-head-actions">
           <label className="btn-admin-outline btn-admin-sm cursor-pointer">
             <Upload size={14} />
-            <span>Ganti File PDF</span>
-            <input type="file" accept="application/pdf" hidden onChange={handlePdfChange} />
+            <span>{uploadingPdf ? 'Mengunggah...' : 'Ganti File PDF'}</span>
+            <input
+              type="file"
+              accept="application/pdf"
+              hidden
+              disabled={uploadingPdf}
+              onChange={handlePdfChange}
+            />
           </label>
           <button type="button" className="btn-admin-outline btn-admin-sm">
             <Download size={14} />
@@ -340,38 +430,39 @@ export default function ApbdAdminPage() {
                 </tr>
               ) : (
                 visibleRows.map((row) => (
-                <tr key={row.id}>
-                  <td className="text-muted">{row.kode}</td>
-                  <td>
-                    <div className="cell-stack">
-                      <strong>{row.uraian}</strong>
-                      <span>{row.keterangan}</span>
-                    </div>
-                  </td>
-                  <td className="text-right font-semibold">{formatRupiah(row.anggaran)}</td>
-                  <td className="text-right">{formatRupiah(row.realisasi)}</td>
-                  <td className="text-right">
-                    <div className="admin-action-group">
-                      <button
-                        type="button"
-                        onClick={() => openModal(row)}
-                        className="admin-icon-btn"
-                        title="Edit rincian"
-                      >
-                        <Pencil size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(row.id)}
-                        className="admin-icon-btn is-danger"
-                        title="Hapus rincian"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              )))}
+                  <tr key={row.id}>
+                    <td className="text-muted">{row.kode}</td>
+                    <td>
+                      <div className="cell-stack">
+                        <strong>{row.uraian}</strong>
+                        <span>{row.keterangan}</span>
+                      </div>
+                    </td>
+                    <td className="text-right font-semibold">{formatRupiah(row.anggaran)}</td>
+                    <td className="text-right">{formatRupiah(row.realisasi)}</td>
+                    <td className="text-right">
+                      <div className="admin-action-group">
+                        <button
+                          type="button"
+                          onClick={() => openModal(row)}
+                          className="admin-icon-btn"
+                          title="Edit rincian"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openDeleteModal(row)}
+                          className="admin-icon-btn is-danger"
+                          title="Hapus rincian"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
             <tfoot>
               <tr>
@@ -391,9 +482,12 @@ export default function ApbdAdminPage() {
         </div>
       </section>
 
-      {/* Tambah/Edit Rincian */}
+      {/* Modal Tambah/Edit Rincian */}
       {modalOpen && (
-        <div className="admin-modal-overlay" onClick={() => setModalOpen(false)}>
+        <div
+          className="admin-modal-overlay"
+          onClick={() => !saving && setModalOpen(false)}
+        >
           <form
             onSubmit={handleSaveRincian}
             onClick={(e) => e.stopPropagation()}
@@ -403,6 +497,7 @@ export default function ApbdAdminPage() {
               <h3>{editingItem ? 'Edit Rincian APBDes' : 'Tambah Rincian APBDes'}</h3>
               <button
                 type="button"
+                disabled={saving}
                 onClick={() => setModalOpen(false)}
                 className="admin-icon-btn"
               >
@@ -483,18 +578,42 @@ export default function ApbdAdminPage() {
             <div className="admin-drawer-foot">
               <button
                 type="button"
+                disabled={saving}
                 onClick={() => setModalOpen(false)}
                 className="btn-admin-outline"
               >
                 Batal
               </button>
-              <button type="submit" className="btn-admin-primary">
-                Simpan Rincian
+              <button type="submit" disabled={saving} className="btn-admin-primary">
+                {saving ? 'Menyimpan...' : 'Simpan Rincian'}
               </button>
             </div>
           </form>
         </div>
       )}
+
+      {/* Modal Konfirmasi Hapus */}
+      <AdminConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Hapus Pos Rincian APBD?"
+        description={
+          deleteTarget && (
+            <>
+              Anda yakin ingin menghapus pos{' '}
+              <strong style={{ color: '#0f172a' }}>
+                {deleteTarget.kode} — {deleteTarget.uraian}
+              </strong>{' '}
+              ({formatRupiah(deleteTarget.anggaran)})? Total APBDes pada halaman publik akan
+              otomatis dihitung ulang.
+            </>
+          )
+        }
+        confirmLabel="Ya, Hapus Pos"
+        loading={deleting}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   );
 }

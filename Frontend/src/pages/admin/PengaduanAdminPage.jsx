@@ -9,31 +9,54 @@ import {
   Trash2,
   Phone,
   Eye,
+  AlertCircle,
 } from 'lucide-react';
-import { adminApi } from '../../services/adminapi';
+import { adminApi } from '../../services/adminApi';
+import { useAdminToast } from '../../context/AdminToastContext';
+import AdminConfirmModal from '../../components/admin/AdminConfirmModal';
 
 export default function PengaduanAdminPage() {
+  const toast = useAdminToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [activeTab, setActiveTab] = useState('Semua');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
   const [draftStatus, setDraftStatus] = useState('Menunggu');
   const [saving, setSaving] = useState(false);
 
+  // State modal konfirmasi hapus
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setPageError('');
+
     adminApi
       .getPengaduan()
       .then((res) => {
+        if (!active) return;
         if (Array.isArray(res)) setItems(res);
         else if (res && Array.isArray(res.items)) setItems(res.items);
         else setItems([]);
       })
       .catch((err) => {
-        console.error('Gagal memuat daftar pengaduan:', err);
-        setItems([]);
+        if (active) {
+          setPageError(err.message || 'Gagal memuat daftar pengaduan warga.');
+          setItems([]);
+        }
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const counts = useMemo(
@@ -52,10 +75,10 @@ export default function PengaduanAdminPage() {
       const q = search.toLowerCase();
       const matchQuery =
         !q ||
-        item.subjek.toLowerCase().includes(q) ||
-        item.pelapor.toLowerCase().includes(q) ||
-        item.id.toLowerCase().includes(q) ||
-        item.dusun.toLowerCase().includes(q);
+        String(item.subjek || '').toLowerCase().includes(q) ||
+        String(item.pelapor || '').toLowerCase().includes(q) ||
+        String(item.id || '').toLowerCase().includes(q) ||
+        String(item.dusun || '').toLowerCase().includes(q);
       return matchTab && matchQuery;
     });
   }, [items, activeTab, search]);
@@ -69,21 +92,50 @@ export default function PengaduanAdminPage() {
     if (!selected) return;
     setSaving(true);
     try {
-      await adminApi.updatePengaduanStatus(selected.id, draftStatus).catch(() => {});
+      await adminApi.updatePengaduanStatus(selected.id, draftStatus);
       setItems((prev) =>
         prev.map((item) => (item.id === selected.id ? { ...item, status: draftStatus } : item))
       );
       setSelected((prev) => (prev ? { ...prev, status: draftStatus } : null));
+      toast.success(
+        `Status tiket #${selected.id} berhasil diubah menjadi "${draftStatus}".`,
+        'Status Diperbarui'
+      );
+    } catch (err) {
+      toast.error(err.message || 'Gagal memperbarui status pengaduan.', 'Gagal Menyimpan');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Hapus laporan pengaduan ini secara permanen?')) return;
-    await adminApi.deletePengaduan(id).catch(() => {});
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    if (selected?.id === id) setSelected(null);
+  const openDeleteModal = (item) => {
+    setDeleteError('');
+    setDeleteTarget(item);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteError('');
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const targetId = deleteTarget.id;
+      const targetSubjek = deleteTarget.subjek;
+      await adminApi.deletePengaduan(targetId);
+      setItems((prev) => prev.filter((i) => i.id !== targetId));
+      if (selected?.id === targetId) setSelected(null);
+      setDeleteTarget(null);
+      toast.success(`Laporan "${targetSubjek}" berhasil dihapus.`, 'Pengaduan Dihapus');
+    } catch (err) {
+      setDeleteError(err.message || 'Gagal menghapus laporan pengaduan.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -99,6 +151,27 @@ export default function PengaduanAdminPage() {
           </p>
         </div>
       </div>
+
+      {pageError && (
+        <div
+          role="alert"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            borderRadius: '10px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#b91c1c',
+            fontSize: '0.9rem',
+          }}
+        >
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{pageError}</span>
+        </div>
+      )}
 
       {/* Metrik Status */}
       <div className="admin-grid-3">
@@ -142,7 +215,7 @@ export default function PengaduanAdminPage() {
         </div>
       </div>
 
-      {/* Filter, Tabel */}
+      {/* Filter & Tabel */}
       <section className="admin-card">
         <div className="admin-tabs">
           {['Semua', 'Menunggu', 'Diproses', 'Selesai'].map((tab) => (
@@ -196,52 +269,62 @@ export default function PengaduanAdminPage() {
                 </tr>
               ) : (
                 filteredItems.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="cell-avatar-row">
-                      <span className="admin-initials">{item.inisial}</span>
-                      <div className="cell-stack">
-                        <strong>{item.pelapor}</strong>
-                        <span>{item.telepon}</span>
-                        <span className="admin-pill is-neutral is-xs">{item.dusun}</span>
+                  <tr key={item.id}>
+                    <td>
+                      <div className="cell-avatar-row">
+                        <span className="admin-initials">{item.inisial}</span>
+                        <div className="cell-stack">
+                          <strong>{item.pelapor}</strong>
+                          <span>{item.telepon}</span>
+                          <span className="admin-pill is-neutral is-xs">{item.dusun}</span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="admin-pill is-success-soft">{item.kategori}</span>
-                  </td>
-                  <td>
-                    <div className="cell-stack">
-                      <strong>{item.subjek}</strong>
-                      <span className="text-truncate-2">{item.ringkasan}</span>
-                      <code className="admin-code">#{item.id}</code>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={`admin-pill ${
-                        item.status === 'Menunggu'
-                          ? 'is-warning-soft'
-                          : item.status === 'Diproses'
-                            ? 'is-info-soft'
-                            : 'is-success-soft'
-                      }`}
-                    >
-                      • {item.status}
-                    </span>
-                  </td>
-                  <td className="text-right">
-                    <button
-                      type="button"
-                      onClick={() => openDetail(item)}
-                      className="btn-admin-primary btn-admin-sm"
-                    >
-                      <Eye size={14} />
-                      <span>Tinjau</span>
-                    </button>
-                  </td>
-                </tr>
-              )))}
+                    </td>
+                    <td>
+                      <span className="admin-pill is-success-soft">{item.kategori}</span>
+                    </td>
+                    <td>
+                      <div className="cell-stack">
+                        <strong>{item.subjek}</strong>
+                        <span className="text-truncate-2">{item.ringkasan}</span>
+                        <code className="admin-code">#{item.id}</code>
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={`admin-pill ${item.status === 'Menunggu'
+                            ? 'is-warning-soft'
+                            : item.status === 'Diproses'
+                              ? 'is-info-soft'
+                              : 'is-success-soft'
+                          }`}
+                      >
+                        • {item.status}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <div className="admin-action-group">
+                        <button
+                          type="button"
+                          onClick={() => openDetail(item)}
+                          className="btn-admin-primary btn-admin-sm"
+                        >
+                          <Eye size={14} />
+                          <span>Tinjau</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openDeleteModal(item)}
+                          className="admin-icon-btn is-danger"
+                          title="Hapus laporan"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -353,7 +436,7 @@ export default function PengaduanAdminPage() {
             <div className="admin-drawer-foot">
               <button
                 type="button"
-                onClick={() => handleDelete(selected.id)}
+                onClick={() => openDeleteModal(selected)}
                 className="btn-admin-danger-ghost"
               >
                 <Trash2 size={15} />
@@ -370,6 +453,27 @@ export default function PengaduanAdminPage() {
           </aside>
         </div>
       )}
+
+      {/* Modal Konfirmasi Hapus */}
+      <AdminConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Hapus Laporan Pengaduan?"
+        description={
+          deleteTarget && (
+            <>
+              Anda yakin ingin menghapus laporan{' '}
+              <strong style={{ color: '#0f172a' }}>{deleteTarget.subjek}</strong> dari{' '}
+              <strong style={{ color: '#0f172a' }}>{deleteTarget.pelapor}</strong> (#
+              {deleteTarget.id})? Laporan yang dihapus akan hilang permanen.
+            </>
+          )
+        }
+        confirmLabel="Ya, Hapus Laporan"
+        loading={deleting}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   );
 }
