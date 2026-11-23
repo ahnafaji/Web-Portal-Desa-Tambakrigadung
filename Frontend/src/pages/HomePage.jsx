@@ -15,10 +15,7 @@ export default function HomePage() {
       <StatsSection />
       <ProfilSection />
       <SambutanSection />
-      <StrukturPemerintahanSection
-        fotoKades="/images/kades.jpg"
-        baganImage="/images/bagan-struktur-pemerintah-desa.png"
-      />
+      <StrukturPemerintahanSection baganImage="/images/bagan-struktur-pemerintah-desa.png"/>
       <PotensiSection />
       <ApbdSection />
       <UmkmSection />

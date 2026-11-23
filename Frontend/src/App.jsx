@@ -25,6 +25,9 @@ import GaleriFormPage from "./pages/admin/GaleriFormPage.jsx";
 import ApbdAdminPage from "./pages/admin/ApbdAdminPage.jsx";
 import BeritaAdminPage from "./pages/admin/BeritaAdminPage.jsx";
 import BeritaFormPage from "./pages/admin/BeritaFormPage.jsx";
+import DataKependudukanAdminPage from "./pages/admin/DataKependudukanAdminPage.jsx";
+import PotensiAdminPage from "./pages/admin/PotensiAdminPage.jsx";
+import ProfilPerangkatAdminPage from "./pages/admin/ProfilPerangkatAdminPage.jsx";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -48,9 +51,9 @@ export default function App() {
             <Route path="berita" element={<BeritaAdminPage />} />
             <Route path="berita/tambah" element={<BeritaFormPage />} />
             <Route path="berita/edit/:id" element={<BeritaFormPage />} />
-            <Route path="potensi" element={<ComingSoon title="Manajemen Potensi Desa" />} />
-            <Route path="kependudukan" element={<ComingSoon title="Data Kependudukan" />} />
-            <Route path="profil" element={<ComingSoon title="Profil dan Perangkat Desa" />} />
+            <Route path="potensi" element={<PotensiAdminPage />} />
+            <Route path="kependudukan" element={<DataKependudukanAdminPage />} />
+            <Route path="profil" element={<ProfilPerangkatAdminPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

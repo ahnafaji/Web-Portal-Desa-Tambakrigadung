@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import '../../styles/strukturpemerintah.css';
 
-const FOTO_KADES_DEFAULT = '/images/kades.jpg';
+const FOTO_KADES_DEFAULT = `${import.meta.env.BASE_URL}images/kades.jpeg`;
 const BAGAN_SOTK_DEFAULT = '/images/bagan-struktur-pemerintah-desa.png';
 
 const DATA_APARATUR = [
