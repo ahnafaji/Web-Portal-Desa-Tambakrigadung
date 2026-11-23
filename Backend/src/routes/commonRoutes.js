@@ -20,9 +20,15 @@ router.put("/perangkat/:id", ...adminGuard, uploadImagesOnly.single("foto"), com
 router.delete("/perangkat/:id", ...adminGuard, commonController.deletePerangkat);
 
 router.get("/sambutan", commonController.getSambutan);
+
 router.get("/potensi", commonController.getPotensi);
 router.get("/potensi/halaman", commonController.getPotensiPage);
+router.put("/potensi/angka", ...adminGuard, commonController.updatePotensiAngka);
+router.post("/potensi", ...adminGuard, uploadImagesOnly.single("image"), commonController.createPotensi);
+router.put("/potensi/:id", ...adminGuard, uploadImagesOnly.single("image"), commonController.updatePotensi);
+router.delete("/potensi/:id", ...adminGuard, commonController.deletePotensi);
+
 router.get("/kontak", commonController.getKontak);
 router.get("/kontak/halaman", commonController.getKontakPage);
 
-export default router;
+export default router;  

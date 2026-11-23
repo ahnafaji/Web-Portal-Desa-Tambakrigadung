@@ -222,17 +222,132 @@ export const getSambutan = async () => {
   };
 };
 
-export const getPotensi = async ({ limit }) => {
-  const take = limit ? parseInt(limit, 10) : 3;
-  return prisma.potensiDesa.findMany({
-    take,
-    orderBy: { urutan: "asc" },
+const POTENSI_KATEGORI = {
+  wisata: {
+    key: "wisata",
+    label: "Wisata Alam & Budaya",
+    ikon: "mountain",
+    defaultImage: "/images/potensi-wisata.jpg",
+  },
+  perikanan: {
+    key: "perikanan",
+    label: "Perikanan & Budidaya",
+    ikon: "fish",
+    defaultImage: "/images/potensi-tambak.jpg",
+  },
+  peternakan: {
+    key: "peternakan",
+    label: "Peternakan Terintegrasi",
+    ikon: "sprout",
+    defaultImage: "/images/potensi-domba.jpg",
+  },
+};
+
+const DEFAULT_POTENSI_ANGKA = [
+  { id: "luas", key: "luas", label: "Luas Wilayah", value: "421 Ha", caption: "4,21 km² · 7,38% luas Kec. Tikung", persen: 7.38 },
+  { id: "penduduk", key: "penduduk", label: "Penduduk", value: "6.644 Jiwa", caption: "13,95% penduduk Kec. Tikung · 3 dusun, 15 RW, 58 RT", persen: 13.95 },
+  { id: "warung", key: "usaha", label: "Warung & Toko", value: "45 Unit", caption: "20 warung makan-minum + 25 toko kelontong · 5,4% dari Kec. Tikung", persen: 5.42 },
+  { id: "belanja", key: "bangun", label: "Belanja Pembangunan", value: "Rp227,3 jt", caption: "24,5% dari total belanja APBDes 2026", persen: 24.5 },
+];
+
+const parseTagToInfo = (tagStr, fallbackIcon = "sparkles") => {
+  const clean = String(tagStr || "").trim();
+  if (!clean) return null;
+  const colonIdx = clean.indexOf(":");
+  if (colonIdx === -1) {
+    return { ikon: fallbackIcon, label: "Sorotan", value: clean };
+  }
+  const label = clean.slice(0, colonIdx).trim();
+  const value = clean.slice(colonIdx + 1).trim();
+  const lower = label.toLowerCase();
+  let ikon = fallbackIcon;
+  if (lower.includes("anggaran") || lower.includes("dana")) ikon = "wallet";
+  else if (lower.includes("jarak") || lower.includes("lokasi")) ikon = "map-pin";
+  else if (lower.includes("komoditas") || lower.includes("hasil")) ikon = "sprout";
+  else if (lower.includes("pengelola") || lower.includes("dukungan")) ikon = "users";
+  return { ikon, label, value };
+};
+
+const buildDefaultAksi = (lokasi) => [
+  {
+    label: "Petunjuk Rute / Lokasi",
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      lokasi || "Desa Tambakrigadung Tikung Lamongan"
+    )}`,
+    ikon: "map-pin",
+    primary: true,
+  },
+  {
+    label: "Lihat Galeri Foto",
+    to: "/galeri",
+    ikon: "image",
+    primary: false,
+  },
+];
+
+const formatPotensiItem = (p) => {
+  const kat = POTENSI_KATEGORI[p.kategoriKey] || POTENSI_KATEGORI.wisata;
+  const infoArr = Array.isArray(p.info) ? p.info : [];
+  const deskripsiArr = Array.isArray(p.deskripsi)
+    ? p.deskripsi
+    : p.deskripsi
+      ? [String(p.deskripsi)]
+      : [];
+
+  return {
+    id: p.id,
+    slug: p.slug,
+    kategori: p.kategoriKey,
+    kategoriKey: p.kategoriKey,
+    kategoriLabel: p.kategoriLabel || kat.label,
+    ikon: p.ikon || kat.ikon,
+    lokasi: p.lokasi,
+    nama: p.judul,
+    judul: p.judul,
+    image: p.image || kat.defaultImage,
+    deskripsi: deskripsiArr,
+    deskripsiText: deskripsiArr.join("\n\n"),
+    info: infoArr,
+    tag1: infoArr[0] ? `${infoArr[0].label}: ${infoArr[0].value}` : "",
+    tag2: infoArr[1] ? `${infoArr[1].label}: ${infoArr[1].value}` : "",
+    aksi: Array.isArray(p.aksi) && p.aksi.length ? p.aksi : buildDefaultAksi(p.lokasi),
+    urutan: p.urutan,
+  };
+};
+
+export const getPotensi = async ({ limit } = {}) => {
+  const take = limit ? parseInt(limit, 10) : undefined;
+  const items = await prisma.potensiDesa.findMany({
+    ...(take ? { take } : {}),
+    orderBy: [{ urutan: "asc" }, { createdAt: "asc" }],
   });
+  return items.map(formatPotensiItem);
 };
 
 export const getPotensiPage = async () => {
-  const items = await prisma.potensiDesa.findMany({
-    orderBy: { urutan: "asc" },
+  const [rawItems, profil] = await Promise.all([
+    prisma.potensiDesa.findMany({
+      orderBy: [{ urutan: "asc" }, { createdAt: "asc" }],
+    }),
+    prisma.profilDesa.findFirst(),
+  ]);
+
+  const items = rawItems.map(formatPotensiItem);
+  const savedAngka = Array.isArray(profil?.potensiAngka) && profil.potensiAngka.length
+    ? profil.potensiAngka
+    : DEFAULT_POTENSI_ANGKA;
+
+  const angkaItems = DEFAULT_POTENSI_ANGKA.map((def, idx) => {
+    const match = savedAngka.find((s) => s.id === def.id || s.key === def.key) || savedAngka[idx];
+    return {
+      id: def.id,
+      key: def.key,
+      label: match?.label || def.label,
+      value: match?.value || def.value,
+      caption: match?.caption || match?.sub || def.caption,
+      sub: match?.sub || match?.caption || def.caption,
+      persen: typeof match?.persen === "number" ? match.persen : def.persen,
+    };
   });
 
   return {
@@ -253,12 +368,7 @@ export const getPotensiPage = async () => {
       judul: "Potensi Desa dalam Angka",
       subjudul: "Ringkasan data resmi desa dan Kecamatan Tikung sebagai gambaran daya dukung sektor unggulan.",
       diperbarui: "Data BPS 2023 & APBDes 2026",
-      items: [
-        { key: "luas", label: "Luas Wilayah", value: "421 Ha", caption: "4,21 km² · 7,38% luas Kec. Tikung", persen: 7.38 },
-        { key: "penduduk", label: "Penduduk", value: "6.644 Jiwa", caption: "13,95% penduduk Kec. Tikung · 3 dusun, 15 RW, 58 RT", persen: 13.95 },
-        { key: "usaha", label: "Warung & Toko", value: "45 Unit", caption: "20 warung makan-minum + 25 toko kelontong · 5,4% dari Kec. Tikung", persen: 5.42 },
-        { key: "bangun", label: "Belanja Pembangunan", value: "Rp227,3 jt", caption: "24,5% dari total belanja APBDes 2026", persen: 24.5 },
-      ],
+      items: angkaItems,
       sumber: "Sumber: Profil Desa Tambakrigadung; BPS Kab. Lamongan; Perdes APBDes 2026.",
     },
     cta: {
@@ -270,6 +380,173 @@ export const getPotensiPage = async () => {
       email: "Pemdestambakrigadung@gmail.com",
     },
   };
+};
+
+export const createPotensi = async (data = {}, file = null) => {
+  const judul = String(data.judul || data.nama || "").trim();
+  if (!judul) {
+    throw new AppError("Judul potensi unggulan wajib diisi.", 400);
+  }
+
+  const kat = POTENSI_KATEGORI[data.kategoriKey] || POTENSI_KATEGORI.wisata;
+  const lokasi = String(data.lokasi || "").trim() || "Desa Tambakrigadung, Kec. Tikung";
+
+  let image = kat.defaultImage;
+  if (file) {
+    if (!checkMagicBytes(file.buffer, file.mimetype)) {
+      throw new AppError("Isi berkas foto potensi tidak valid atau rusak.", 400);
+    }
+    image = await uploadToSupabase(file, "potensi");
+  } else if (data.image) {
+    image = sanitizeFotoUrl(data.image) || kat.defaultImage;
+  }
+
+  const rawDesk = String(data.deskripsi || "").trim();
+  const deskripsi = rawDesk
+    ? rawDesk.split(/\r?\n+/).map((p) => p.trim()).filter(Boolean)
+    : [];
+
+  const info = [
+    parseTagToInfo(data.tag1, "wallet"),
+    parseTagToInfo(data.tag2, "map-pin"),
+  ].filter(Boolean);
+
+  const baseSlug = judul
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const slug = `${baseSlug || "potensi"}-${Date.now().toString().slice(-4)}`;
+  const count = await prisma.potensiDesa.count();
+
+  const created = await prisma.potensiDesa.create({
+    data: {
+      slug,
+      kategoriKey: kat.key,
+      kategoriLabel: kat.label,
+      ikon: kat.ikon,
+      lokasi,
+      judul,
+      image,
+      deskripsi,
+      info,
+      aksi: buildDefaultAksi(lokasi),
+      urutan: count + 1,
+    },
+  });
+
+  return formatPotensiItem(created);
+};
+
+export const updatePotensi = async (id, data = {}, file = null) => {
+  const existing = await prisma.potensiDesa.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Data potensi desa tidak ditemukan.", 404);
+  }
+
+  const judul =
+    data.judul !== undefined || data.nama !== undefined
+      ? String(data.judul || data.nama || "").trim()
+      : existing.judul;
+  if (!judul) {
+    throw new AppError("Judul potensi unggulan wajib diisi.", 400);
+  }
+
+  const kat =
+    data.kategoriKey && POTENSI_KATEGORI[data.kategoriKey]
+      ? POTENSI_KATEGORI[data.kategoriKey]
+      : POTENSI_KATEGORI[existing.kategoriKey] || POTENSI_KATEGORI.wisata;
+
+  let image = existing.image;
+  if (file) {
+    if (!checkMagicBytes(file.buffer, file.mimetype)) {
+      throw new AppError("Isi berkas foto potensi tidak valid atau rusak.", 400);
+    }
+    image = await uploadToSupabase(file, "potensi");
+  } else if (data.image !== undefined && String(data.image).trim()) {
+    image = sanitizeFotoUrl(data.image);
+  }
+
+  const deskripsi =
+    data.deskripsi !== undefined
+      ? String(data.deskripsi)
+        .split(/\r?\n+/)
+        .map((p) => p.trim())
+        .filter(Boolean)
+      : existing.deskripsi;
+
+  const info =
+    data.tag1 !== undefined || data.tag2 !== undefined
+      ? [
+        parseTagToInfo(data.tag1, "wallet"),
+        parseTagToInfo(data.tag2, "map-pin"),
+      ].filter(Boolean)
+      : existing.info;
+
+  const updated = await prisma.potensiDesa.update({
+    where: { id },
+    data: {
+      judul,
+      kategoriKey: kat.key,
+      kategoriLabel: kat.label,
+      ikon: kat.ikon,
+      lokasi: data.lokasi !== undefined ? String(data.lokasi).trim() || existing.lokasi : existing.lokasi,
+      image,
+      deskripsi,
+      info,
+    },
+  });
+
+  return formatPotensiItem(updated);
+};
+
+export const deletePotensi = async (id) => {
+  const existing = await prisma.potensiDesa.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Data potensi desa tidak ditemukan.", 404);
+  }
+  return prisma.potensiDesa.delete({ where: { id } });
+};
+
+export const updatePotensiAngka = async (payload = {}) => {
+  const items = Array.isArray(payload.items) ? payload.items : [];
+  if (!items.length) {
+    throw new AppError("Data indikator potensi dalam angka tidak valid.", 400);
+  }
+
+  const normalized = DEFAULT_POTENSI_ANGKA.map((def, idx) => {
+    const incoming = items.find((it) => it.id === def.id || it.key === def.key) || items[idx] || {};
+    const value = String(incoming.value ?? def.value).trim() || def.value;
+    const sub = String(incoming.sub ?? incoming.caption ?? def.caption).trim() || def.caption;
+    return {
+      id: def.id,
+      key: def.key,
+      label: def.label,
+      value,
+      sub,
+      caption: sub,
+      persen: def.persen,
+    };
+  });
+
+  const existing = await prisma.profilDesa.findFirst();
+  if (existing) {
+    await prisma.profilDesa.update({
+      where: { id: existing.id },
+      data: { potensiAngka: normalized },
+    });
+  } else {
+    await prisma.profilDesa.create({
+      data: {
+        sejarah: "Sejarah Desa Tambakrigadung",
+        visi: "Visi Desa Tambakrigadung",
+        misi: ["Meningkatkan pelayanan masyarakat"],
+        runningText: "Selamat Datang Di Website Resmi Pemerintah Desa Tambakrigadung",
+        potensiAngka: normalized,
+      },
+    });
+  }
+
+  return normalized;
 };
 
 export const getKontak = async () => {

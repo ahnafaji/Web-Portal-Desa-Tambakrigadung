@@ -294,12 +294,13 @@ model ApbdRealisasi {
 
 // 8. DATA UMUM & PROFIL DESA
 model ProfilDesa {
-  id          String   @id @default(uuid())
-  sejarah     String
-  visi        String
-  misi        String[]
-  runningText String
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(uuid())
+  sejarah      String
+  visi         String
+  misi         String[]
+  runningText  String
+  potensiAngka Json?
+  updatedAt    DateTime @updatedAt
 
   @@map("profil_desa")
 }

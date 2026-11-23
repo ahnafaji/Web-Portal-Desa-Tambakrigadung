@@ -109,6 +109,42 @@ export const getPotensiPage = async (req, res, next) => {
   }
 };
 
+export const createPotensi = async (req, res, next) => {
+  try {
+    const data = await commonService.createPotensi(req.body, req.file);
+    return sendResponse(res, 201, "Potensi desa berhasil ditambahkan.", data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updatePotensi = async (req, res, next) => {
+  try {
+    const data = await commonService.updatePotensi(req.params.id, req.body, req.file);
+    return sendResponse(res, 200, "Data potensi desa berhasil diperbarui.", data);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deletePotensi = async (req, res, next) => {
+  try {
+    await commonService.deletePotensi(req.params.id);
+    return sendResponse(res, 200, "Data potensi desa berhasil dihapus.");
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updatePotensiAngka = async (req, res, next) => {
+  try {
+    const data = await commonService.updatePotensiAngka(req.body);
+    return sendResponse(res, 200, "Ringkasan Potensi Desa dalam Angka berhasil disimpan.", data);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getKontak = async (req, res, next) => {
   try {
     const data = await commonService.getKontak();
