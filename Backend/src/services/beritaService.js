@@ -2,7 +2,30 @@ import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { uploadToSupabase } from "./storageService.js";
 
+const DEFAULT_COVER = "/images/hero-1.jpg";
+
+const KATEGORI_LIST = {
+  kegiatan: { key: "kegiatan", label: "Kegiatan Warga", ikon: "users" },
+  pengumuman: { key: "pengumuman", label: "Pengumuman", ikon: "megaphone" },
+  pertanian: { key: "pertanian", label: "Pertanian & Perikanan", ikon: "sprout" },
+  pembangunan: { key: "pembangunan", label: "Pembangunan", ikon: "hardhat" },
+};
+
+const normalizeKategori = (val) => {
+  const lower = String(val || "").toLowerCase().trim();
+  if (lower.includes("pengumuman")) return KATEGORI_LIST.pengumuman;
+  if (lower.includes("tani") || lower.includes("ikan") || lower.includes("tambak")) {
+    return KATEGORI_LIST.pertanian;
+  }
+  if (lower.includes("bangun") || lower.includes("infrastruktur")) {
+    return KATEGORI_LIST.pembangunan;
+  }
+  return KATEGORI_LIST.kegiatan;
+};
+
 const formatBerita = (b) => {
+  const kat = normalizeKategori(b.kategoriLabel || b.kategoriKey);
+
   return {
     id: b.id,
     slug: b.slug,
@@ -14,15 +37,16 @@ const formatBerita = (b) => {
         ? b.konten
         : "",
     konten: b.konten,
-    kategori: b.kategoriLabel || b.kategoriKey,
-    kategoriKey: b.kategoriKey,
+    kategori: kat.label,
+    kategoriKey: kat.key,
+    kategoriLabel: kat.label,
     penulis: b.penulis,
     tanggal: new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
       month: "short",
       year: "numeric",
     }).format(new Date(b.tanggal || b.createdAt)),
-    status: b.isPublished ? "Terbit" : "Draf",
+    status: b.isPublished ? "Terbit" : "Draft",
     isPublished: b.isPublished,
     pembaca: b.pembaca || 0,
     gambar: b.image,
@@ -41,13 +65,6 @@ export const getBeritaList = async (query = {}) => {
     where.isPublished = status === "Terbit" || status === "published" || status === "true";
   }
 
-  if (kategori && kategori !== "semua" && kategori !== "Semua") {
-    where.OR = [
-      { kategoriKey: { equals: kategori, mode: "insensitive" } },
-      { kategoriLabel: { contains: kategori, mode: "insensitive" } },
-    ];
-  }
-
   if (q) {
     where.OR = [
       { judul: { contains: q, mode: "insensitive" } },
@@ -60,63 +77,63 @@ export const getBeritaList = async (query = {}) => {
 
   const items = await prisma.berita.findMany({
     where,
-    take,
     orderBy: { tanggal: "desc" },
   });
 
-  return items.map(formatBerita);
+  let formatted = items.map(formatBerita);
+  if (kategori && kategori !== "semua" && kategori !== "Semua") {
+    const targetKey = normalizeKategori(kategori).key;
+    formatted = formatted.filter((item) => item.kategoriKey === targetKey);
+  }
+
+  return take ? formatted.slice(0, take) : formatted;
 };
 
 export const getBeritaPage = async () => {
-  const items = await prisma.berita.findMany({
+  const rawItems = await prisma.berita.findMany({
     where: { isPublished: true },
     orderBy: { tanggal: "desc" },
   });
 
-  const populer = await prisma.berita.findMany({
-    where: { isPublished: true },
-    orderBy: { pembaca: "desc" },
-    take: 4,
-    select: {
-      id: true,
-      slug: true,
-      judul: true,
-      tanggal: true,
-      image: true,
-    },
+  // Pertahankan field asli Prisma (termasuk tanggal ISO) sambil menormalisasi kategori
+  const items = rawItems.map((b) => {
+    const kat = normalizeKategori(b.kategoriLabel || b.kategoriKey);
+    return {
+      ...b,
+      kategori: kat.key,
+      kategoriKey: kat.key,
+      kategoriLabel: kat.label,
+    };
   });
 
-  const categories = [
-    { key: "kegiatan", label: "Kegiatan Warga", ikon: "users" },
-    { key: "pengumuman", label: "Pengumuman Resmi", ikon: "megaphone" },
-    { key: "pembangunan", label: "Pembangunan & Infrastruktur", ikon: "hardhat" },
-    { key: "pertanian", label: "Pertanian & Perikanan", ikon: "sprout" },
-    { key: "kesehatan", label: "Kesehatan & Posyandu", ikon: "heart" },
-  ];
+  const populer = [...items]
+    .sort((a, b) => (b.pembaca || 0) - (a.pembaca || 0))
+    .slice(0, 4)
+    .map((b) => ({
+      id: b.id,
+      slug: b.slug,
+      judul: b.judul,
+      tanggal: b.tanggal,
+      image: b.image,
+    }));
 
-  const kategoriSidebar = await Promise.all(
-    categories.map(async (c) => {
-      const count = await prisma.berita.count({
-        where: { isPublished: true, kategoriKey: c.key },
-      });
-      return { ...c, count };
-    })
-  );
+  const categories = Object.values(KATEGORI_LIST);
+  const kategoriSidebar = categories.map((c) => ({
+    ...c,
+    count: items.filter((item) => item.kategoriKey === c.key).length,
+  }));
 
   return {
     header: {
       judul: "Kabar & Artikel Desa",
       deskripsi:
         "Informasi resmi, pengumuman kelembagaan, serta liputan kegiatan pembangunan dan masyarakat Pemerintah Desa Tambakrigadung, Kec. Tikung, Kab. Lamongan.",
-      totalLabel: `${items.length}+ Artikel Terbit`,
+      totalLabel: `${items.length} Artikel Terbit`,
       updateLabel: "Diperbarui Berkala",
     },
     kategoriTabs: [
       { key: "semua", label: "Semua Artikel" },
-      { key: "pengumuman", label: "Pengumuman" },
-      { key: "kegiatan", label: "Kegiatan Warga" },
-      { key: "pembangunan", label: "Pembangunan" },
-      { key: "kesehatan", label: "Kesehatan" },
+      ...categories.map((c) => ({ key: c.key, label: c.label })),
     ],
     kategoriSidebar,
     populer,
@@ -135,35 +152,41 @@ export const getBeritaDetail = async (identifier) => {
     throw new AppError("Artikel berita tidak ditemukan.", 404);
   }
 
-  // Increment reader count
-  await prisma.berita.update({
-    where: { id: article.id },
-    data: { pembaca: { increment: 1 } },
-  });
+  // Increment reader count hanya jika diakses lewat slug publik (bukan edit by id)
+  if (identifier === article.slug) {
+    await prisma.berita.update({
+      where: { id: article.id },
+      data: { pembaca: { increment: 1 } },
+    });
+  }
 
-  const related = await prisma.berita.findMany({
-    where: {
-      isPublished: true,
-      id: { not: article.id },
-      kategoriKey: article.kategoriKey,
-    },
-    take: 3,
-    orderBy: { tanggal: "desc" },
-  });
+  const kat = normalizeKategori(article.kategoriLabel || article.kategoriKey);
+  const normalizedArticle = {
+    ...article,
+    kategori: kat.key,
+    kategoriKey: kat.key,
+    kategoriLabel: kat.label,
+  };
 
   const pageData = await getBeritaPage();
+  const sameCategory = pageData.items.filter(
+    (i) => i.id !== article.id && i.kategoriKey === kat.key
+  );
+  const related = (
+    sameCategory.length ? sameCategory : pageData.items.filter((i) => i.id !== article.id)
+  ).slice(0, 3);
 
   return {
     ...formatBerita(article),
-    article,
-    related: related.length ? related : pageData.items.filter((i) => i.id !== article.id).slice(0, 3),
+    article: normalizedArticle,
+    related,
     populer: pageData.populer,
     kategoriSidebar: pageData.kategoriSidebar,
   };
 };
 
 export const createBerita = async (data, file) => {
-  let imageUrl = data.image || data.gambar || "/images/hero-1.jpg";
+  let imageUrl = data.image || data.gambar || DEFAULT_COVER;
 
   if (file) {
     imageUrl = await uploadToSupabase(file, "berita");
@@ -175,17 +198,18 @@ export const createBerita = async (data, file) => {
     .replace(/^-|-$/g, "");
   const slug = data.slug || `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
-  const isPublished = data.status === "Terbit" || data.status === "published" || data.isPublished === true;
+  const kat = normalizeKategori(data.kategori || data.kategoriKey);
+  const isPublished =
+    data.status === "Terbit" || data.status === "published" || data.isPublished === true;
 
-  // Process konten
   let kontenArray = [];
   if (Array.isArray(data.konten)) {
     kontenArray = data.konten;
   } else if (data.isi) {
-    kontenArray = data.isi.split("\n\n").map((par) => ({
-      type: "paragraph",
-      text: par.trim(),
-    }));
+    kontenArray = data.isi
+      .split("\n\n")
+      .map((par) => ({ type: "paragraph", text: par.trim() }))
+      .filter((p) => p.text);
   } else {
     kontenArray = [{ type: "paragraph", text: data.ringkasan || "" }];
   }
@@ -194,8 +218,8 @@ export const createBerita = async (data, file) => {
     data: {
       slug,
       judul: data.judul,
-      kategoriKey: data.kategoriKey || (data.kategori || "kegiatan").toLowerCase().replace(/\s+/g, "-"),
-      kategoriLabel: data.kategori || "Kegiatan Warga",
+      kategoriKey: kat.key,
+      kategoriLabel: kat.label,
       subLabel: data.subLabel || "Warta Desa",
       featured: data.featured === true || data.featured === "true",
       penulis: data.penulis || "Humas Desa",
@@ -205,7 +229,11 @@ export const createBerita = async (data, file) => {
       ringkasan: data.ringkasan || (data.isi ? data.isi.slice(0, 150) + "..." : ""),
       dateline: data.dateline || "TAMBAKRIGADUNG —",
       konten: kontenArray,
-      tags: Array.isArray(data.tags) ? data.tags : data.tags ? String(data.tags).split(",") : ["DesaTambakrigadung"],
+      tags: Array.isArray(data.tags)
+        ? data.tags
+        : data.tags
+          ? String(data.tags).split(",")
+          : ["DesaTambakrigadung"],
       isPublished,
     },
   });
@@ -219,32 +247,33 @@ export const updateBerita = async (id, data, file) => {
     throw new AppError("Artikel berita tidak ditemukan.", 404);
   }
 
-  let imageUrl = existing.image;
-  if (file) {
-    imageUrl = await uploadToSupabase(file, "berita");
-  } else if (data.gambar || data.image) {
-    imageUrl = data.gambar || data.image;
-  }
-
   const updateData = {};
   if (data.judul) updateData.judul = data.judul;
-  if (data.kategori) {
-    updateData.kategoriLabel = data.kategori;
-    updateData.kategoriKey = data.kategoriKey || data.kategori.toLowerCase().replace(/\s+/g, "-");
+  if (data.kategori || data.kategoriKey) {
+    const kat = normalizeKategori(data.kategori || data.kategoriKey);
+    updateData.kategoriKey = kat.key;
+    updateData.kategoriLabel = kat.label;
   }
   if (data.penulis) updateData.penulis = data.penulis;
   if (data.ringkasan) updateData.ringkasan = data.ringkasan;
-  if (imageUrl) updateData.image = imageUrl;
   if (data.caption !== undefined) updateData.caption = data.caption;
-  if (data.status !== undefined) {
-    updateData.isPublished = data.status === "Terbit" || data.status === "published" || data.status === true;
+
+  if (file) {
+    updateData.image = await uploadToSupabase(file, "berita");
+  } else if (data.removeCover === "true" || data.removeCover === true) {
+    updateData.image = DEFAULT_COVER;
   }
-  if (data.isi) {
-    updateData.konten = data.isi.split("\n\n").map((par) => ({
-      type: "paragraph",
-      text: par.trim(),
-    }));
-  } else if (data.konten) {
+
+  if (data.status !== undefined) {
+    updateData.isPublished =
+      data.status === "Terbit" || data.status === "published" || data.status === true;
+  }
+  if (data.isi !== undefined) {
+    updateData.konten = data.isi
+      .split("\n\n")
+      .map((par) => ({ type: "paragraph", text: par.trim() }))
+      .filter((p) => p.text);
+  } else if (Array.isArray(data.konten)) {
     updateData.konten = data.konten;
   }
 
@@ -257,5 +286,9 @@ export const updateBerita = async (id, data, file) => {
 };
 
 export const deleteBerita = async (id) => {
+  const existing = await prisma.berita.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Artikel berita tidak ditemukan.", 404);
+  }
   return prisma.berita.delete({ where: { id } });
 };

@@ -11,92 +11,60 @@ import {
   Search,
   Pencil,
   Trash2,
+  AlertCircle,
 } from 'lucide-react';
-import { adminApi, exportToCsv } from '../../services/adminapi';
+import { adminApi, exportToCsv } from '../../services/adminApi';
+import { useAdminToast } from '../../context/AdminToastContext';
+import AdminConfirmModal from '../../components/admin/AdminConfirmModal';
 
-const INITIAL_BERITA = [
-  {
-    id: 1,
-    judul: 'Kerja Bakti Membersihkan Saluran Air oleh Seluruh Warga Desa',
-    ringkasan:
-      'Normalisasi saluran irigasi pertanian sepanjang 2 KM menjelang musim penghujan.',
-    kategori: 'Kegiatan Warga',
-    penulis: 'Humas Desa',
-    tanggal: '20 Feb 2026',
-    status: 'Terbit',
-    pembaca: 3420,
-    gambar: '/images/hero-1.jpg',
-  },
-  {
-    id: 2,
-    judul: 'Penyaluran Bantuan Langsung Tunai (BLT) Dana Desa Triwulan I',
-    ringkasan:
-      'Pemerintah desa menyalurkan BLT DD secara transparan kepada 65 KPM di Balai Desa.',
-    kategori: 'Pengumuman',
-    penulis: 'Kaur Kesra',
-    tanggal: '18 Feb 2026',
-    status: 'Terbit',
-    pembaca: 4180,
-    gambar: '/images/kades.jpeg',
-  },
-  {
-    id: 3,
-    judul: 'Panen Raya Bandeng dan Nila di Sentra Budidaya Tambak Boyo',
-    ringkasan:
-      'Hasil panen kolam binaan kelompok tani mencapai 15 ton dengan mutu komoditas unggul.',
-    kategori: 'Pertanian & Perikanan',
-    penulis: 'Pendamping Desa',
-    tanggal: '16 Feb 2026',
-    status: 'Terbit',
-    pembaca: 2890,
-    gambar: '/images/potensi-tambak.jpg',
-  },
-  {
-    id: 4,
-    judul: 'Pengecoran Jalan Usaha Tani Blok Timur Masuki Tahap Finishing',
-    ringkasan:
-      'Akses mobilitas pengangkutan gabah dan sarana produksi tani kini semakin lancar.',
-    kategori: 'Pembangunan',
-    penulis: 'Kaur Perencanaan',
-    tanggal: '12 Feb 2026',
-    status: 'Terbit',
-    pembaca: 2150,
-    gambar: '/images/hero-3.jpg',
-  },
-  {
-    id: 5,
-    judul: 'Draf: Rencana Penataan Taman Terbuka Hijau & Ruang Bermain Dusun Melik',
-    ringkasan:
-      'Usulan rencana penataan fasilitas umum dan ruang terbuka interaksi warga.',
-    kategori: 'Pembangunan',
-    penulis: 'Sekretariat',
-    tanggal: '26 Feb 2026',
-    status: 'Draft',
-    pembaca: 0,
-    gambar: '/images/potensi-wisata.jpg',
-  },
+const KATEGORI_OPTIONS = [
+  'Kegiatan Warga',
+  'Pengumuman',
+  'Pertanian & Perikanan',
+  'Pembangunan',
 ];
 
 export default function BeritaAdminPage() {
-  const [articles, setArticles] = useState(INITIAL_BERITA);
+  const toast = useAdminToast();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [statusTab, setStatusTab] = useState('Semua');
   const [kategoriFilter, setKategoriFilter] = useState('Semua');
   const [search, setSearch] = useState('');
 
+  // State modal konfirmasi hapus
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setPageError('');
+
     adminApi
       .getBerita()
       .then((res) => {
-        if (Array.isArray(res) && res.length) setArticles(res);
+        if (active) setArticles(Array.isArray(res) ? res : []);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (active) setPageError(err.message || 'Gagal memuat daftar berita dari server.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const stats = useMemo(
     () => ({
       total: articles.length,
       terbit: articles.filter((a) => a.status === 'Terbit').length,
-      draft: articles.filter((a) => a.status === 'Draft').length,
+      draft: articles.filter((a) => a.status === 'Draft' || a.status === 'Draf').length,
       pembaca: articles.reduce((s, a) => s + (a.pembaca || 0), 0),
     }),
     [articles]
@@ -104,19 +72,44 @@ export default function BeritaAdminPage() {
 
   const filtered = useMemo(() => {
     return articles.filter((a) => {
-      const matchStatus = statusTab === 'Semua' || a.status === statusTab;
+      const normalizedStatus = a.status === 'Draf' ? 'Draft' : a.status;
+      const matchStatus = statusTab === 'Semua' || normalizedStatus === statusTab;
       const matchCat = kategoriFilter === 'Semua' || a.kategori === kategoriFilter;
       const q = search.toLowerCase();
       const matchQuery =
-        !q || a.judul.toLowerCase().includes(q) || a.penulis.toLowerCase().includes(q);
+        !q ||
+        String(a.judul || '').toLowerCase().includes(q) ||
+        String(a.penulis || '').toLowerCase().includes(q);
       return matchStatus && matchCat && matchQuery;
     });
   }, [articles, statusTab, kategoriFilter, search]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Hapus berita/artikel ini?')) return;
-    await adminApi.deleteBerita(id).catch(() => {});
-    setArticles((prev) => prev.filter((a) => a.id !== id));
+  const openDeleteModal = (item) => {
+    setDeleteError('');
+    setDeleteTarget(item);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteError('');
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const deletedTitle = deleteTarget.judul;
+      await adminApi.deleteBerita(deleteTarget.id);
+      setArticles((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast.success(`Artikel "${deletedTitle}" berhasil dihapus.`, 'Berita Dihapus');
+    } catch (err) {
+      setDeleteError(err.message || 'Gagal menghapus artikel berita.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -163,9 +156,30 @@ export default function BeritaAdminPage() {
             </span>
           </div>
           <div className="admin-stat-value">{stats.pembaca.toLocaleString('id-ID')}</div>
-          <p className="admin-stat-hint text-success">↗ +18% dari bln lalu</p>
+          <p className="admin-stat-hint">Akumulasi pembaca artikel</p>
         </div>
       </div>
+
+      {pageError && (
+        <div
+          role="alert"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            borderRadius: '10px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#b91c1c',
+            fontSize: '0.9rem',
+          }}
+        >
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{pageError}</span>
+        </div>
+      )}
 
       <div className="admin-page-head">
         <div>
@@ -225,10 +239,11 @@ export default function BeritaAdminPage() {
             className="admin-select"
           >
             <option value="Semua">Semua Kategori</option>
-            <option value="Kegiatan Warga">Kegiatan Warga</option>
-            <option value="Pengumuman">Pengumuman</option>
-            <option value="Pertanian & Perikanan">Pertanian &amp; Perikanan</option>
-            <option value="Pembangunan">Pembangunan</option>
+            {KATEGORI_OPTIONS.map((kat) => (
+              <option key={kat} value={kat}>
+                {kat}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -244,60 +259,96 @@ export default function BeritaAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="cell-thumb-row">
-                      <img src={item.gambar} alt={item.judul} className="admin-thumb-wide" />
-                      <div className="cell-stack">
-                        <strong>{item.judul}</strong>
-                        <span className="text-truncate-2">{item.ringkasan}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="admin-pill is-info-soft">{item.kategori}</span>
-                  </td>
-                  <td>
-                    <div className="cell-stack">
-                      <strong>{item.penulis}</strong>
-                      <span>{item.tanggal}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={`admin-pill ${
-                        item.status === 'Terbit' ? 'is-success-soft' : 'is-neutral'
-                      }`}
-                    >
-                      • {item.status}
-                    </span>
-                  </td>
-                  <td className="text-right">
-                    <div className="admin-action-group">
-                      <Link
-                        to={`/admin/berita/edit/${item.id}`}
-                        className="admin-icon-btn"
-                        title="Edit artikel"
-                      >
-                        <Pencil size={15} />
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(item.id)}
-                        className="admin-icon-btn is-danger"
-                        title="Hapus artikel"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
+                    Memuat daftar berita...
                   </td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>
+                    Belum ada artikel berita yang sesuai.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="cell-thumb-row">
+                        <img
+                          src={item.gambar || '/images/hero-1.jpg'}
+                          alt={item.judul}
+                          className="admin-thumb-wide"
+                        />
+                        <div className="cell-stack">
+                          <strong>{item.judul}</strong>
+                          <span className="text-truncate-2">{item.ringkasan}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className="admin-pill is-info-soft">{item.kategori}</span>
+                    </td>
+                    <td>
+                      <div className="cell-stack">
+                        <strong>{item.penulis}</strong>
+                        <span>{item.tanggal}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span
+                        className={`admin-pill ${item.status === 'Terbit' ? 'is-success-soft' : 'is-neutral'
+                          }`}
+                      >
+                        • {item.status === 'Draf' ? 'Draft' : item.status}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <div className="admin-action-group">
+                        <Link
+                          to={`/admin/berita/edit/${item.id}`}
+                          className="admin-icon-btn"
+                          title="Edit artikel"
+                        >
+                          <Pencil size={15} />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => openDeleteModal(item)}
+                          className="admin-icon-btn is-danger"
+                          title="Hapus artikel"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </section>
+
+      <AdminConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Hapus Artikel Berita?"
+        description={
+          deleteTarget && (
+            <>
+              Anda yakin ingin menghapus artikel{' '}
+              <strong style={{ color: '#0f172a' }}>{deleteTarget.judul}</strong>? Artikel yang
+              dihapus akan hilang permanen dari portal berita warga.
+            </>
+          )
+        }
+        confirmLabel="Ya, Hapus Berita"
+        loading={deleting}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   );
 }

@@ -64,24 +64,26 @@ function BeritaContent({
   onSearch,
   onPageChange,
 }) {
-  const featured = useMemo(() => d.items.find((i) => i.featured) || d.items[0], [d.items]);
+  const items = Array.isArray(d?.items) ? d.items : [];
+  const featured = useMemo(() => items.find((i) => i.featured) || items[0], [items]);
 
   // Sembunyikan banner Berita Utama ketika user sedang memfilter kategori tertentu atau mencari kata kunci
-  const showFeatured = aktifKategori === "semua" && !query && currentPage === 1;
+  const showFeatured = Boolean(featured) && aktifKategori === "semua" && !query && currentPage === 1;
 
   const filteredItems = useMemo(() => {
-    return d.items.filter((item) => {
+    return items.filter((item) => {
       if (showFeatured && featured && item.id === featured.id) return false;
-      const matchKat = aktifKategori === "semua" || item.kategori === aktifKategori;
+      const itemKat = item.kategoriKey || item.kategori;
+      const matchKat = aktifKategori === "semua" || itemKat === aktifKategori;
       const q = query.toLowerCase();
       const matchQuery =
         !q ||
-        item.judul.toLowerCase().includes(q) ||
-        item.ringkasan.toLowerCase().includes(q) ||
-        item.kategoriLabel.toLowerCase().includes(q);
+        String(item.judul || "").toLowerCase().includes(q) ||
+        String(item.ringkasan || "").toLowerCase().includes(q) ||
+        String(item.kategoriLabel || "").toLowerCase().includes(q);
       return matchKat && matchQuery;
     });
-  }, [d.items, featured, showFeatured, aktifKategori, query]);
+  }, [items, featured, showFeatured, aktifKategori, query]);
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
@@ -97,7 +99,7 @@ function BeritaContent({
         <div className="berita-main">
           {/* Tabs Filter Kategori */}
           <div className="chips berita-chips" role="tablist" aria-label="Filter kategori berita">
-            {d.kategoriTabs.map((t) => (
+            {(d.kategoriTabs || []).map((t) => (
               <button
                 key={t.key}
                 type="button"
@@ -152,8 +154,8 @@ function BeritaContent({
           kategoriTitle="Kategori Artikel"
           query={query}
           onSearch={onSearch}
-          populer={d.populer}
-          kategoriList={d.kategoriSidebar}
+          populer={d.populer || []}
+          kategoriList={d.kategoriSidebar || []}
           aktifKategori={aktifKategori}
           onSelectKategori={onSelectKategori}
         />
