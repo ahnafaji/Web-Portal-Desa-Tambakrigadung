@@ -12,83 +12,11 @@ import {
   Trash2,
   Camera,
   Info,
+  AlertCircle,
 } from 'lucide-react';
-import { adminApi } from '../../services/adminapi';
-
-const INITIAL_ALBUMS = [
-  {
-    id: 1,
-    judul: 'Kerja Bakti Membersihkan Saluran Irigasi',
-    kategori: 'Kegiatan Warga',
-    deskripsi:
-      'Normalisasi dan pembersihan aliran air Dusun Tambakboyo menjelang musim penghujan.',
-    tanggal: '20 Feb 2026',
-    lokasi: 'Dusun Tambakboyo',
-    jumlahFoto: 8,
-    status: 'Terbit',
-    cover: '/images/hero-1.jpg',
-  },
-  {
-    id: 2,
-    judul: 'Pengembangan Fasilitas Area Wisata Desa',
-    kategori: 'Wisata & Budaya',
-    deskripsi:
-      'Penambahan gazebo istirahat keluarga dan penataan lanskap hijau taman bermain anak.',
-    tanggal: '15 Feb 2026',
-    lokasi: 'Dusun Krajan',
-    jumlahFoto: 12,
-    status: 'Terbit',
-    cover: '/images/potensi-wisata.jpg',
-  },
-  {
-    id: 3,
-    judul: 'Panen Raya Tambak Ikan Air Tawar',
-    kategori: 'Kegiatan Warga',
-    deskripsi:
-      'Hasil panen budidaya ikan lele dan nila kelompok budidaya air tawar Dusun Melik.',
-    tanggal: '10 Feb 2026',
-    lokasi: 'Dusun Melik',
-    jumlahFoto: 6,
-    status: 'Terbit',
-    cover: '/images/potensi-tambak.jpg',
-  },
-  {
-    id: 4,
-    judul: 'Progres Pavingisasi Jalan Usaha Tani',
-    kategori: 'Pembangunan',
-    deskripsi:
-      'Peningkatan akses transportasi pengangkutan hasil pertanian warga RT 03 RW 01.',
-    tanggal: '04 Feb 2026',
-    lokasi: 'Dusun Krajan',
-    jumlahFoto: 10,
-    status: 'Terbit',
-    cover: '/images/hero-3.jpg',
-  },
-  {
-    id: 5,
-    judul: 'Musrenbangdes Penetapan RKPDes 2026',
-    kategori: 'Pemerintahan',
-    deskripsi:
-      'Rapat koordinasi bersama BPD, LPMD, dan tokoh masyarakat di Balai Desa Tambakrigadung.',
-    tanggal: '28 Jan 2026',
-    lokasi: 'Balai Desa',
-    jumlahFoto: 15,
-    status: 'Terbit',
-    cover: '/images/kades.jpeg',
-  },
-  {
-    id: 6,
-    judul: 'Pelatihan Pengemasan Produk UMKM',
-    kategori: 'Kegiatan Warga',
-    deskripsi:
-      'Dokumentasi pelatihan desain kemasan pangan higienis dan sertifikasi halal bersama dinas.',
-    tanggal: '24 Jan 2026',
-    lokasi: 'Balai Dusun Melik',
-    jumlahFoto: 4,
-    status: 'Draft',
-    cover: '/images/potensi-domba.jpg',
-  },
-];
+import { adminApi } from '../../services/adminApi';
+import { useAdminToast } from '../../context/AdminToastContext';
+import AdminConfirmModal from '../../components/admin/AdminConfirmModal';
 
 const CATEGORIES = [
   'Semua',
@@ -99,18 +27,49 @@ const CATEGORIES = [
 ];
 
 export default function GaleriAdminPage() {
-  const [albums, setAlbums] = useState(INITIAL_ALBUMS);
+  const toast = useAdminToast();
+  const [albums, setAlbums] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState('');
   const [activeCategory, setActiveCategory] = useState('Semua');
   const [search, setSearch] = useState('');
 
+  // State modal konfirmasi hapus
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
   useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setPageError('');
+
     adminApi
       .getGaleri()
       .then((res) => {
-        if (Array.isArray(res) && res.length) setAlbums(res);
+        if (active) setAlbums(Array.isArray(res) ? res : []);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (active) setPageError(err.message || 'Gagal memuat daftar galeri dari server.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
+
+  const topCategory = useMemo(() => {
+    if (!albums.length) return '-';
+    const counts = albums.reduce((acc, a) => {
+      const key = a.kategori || 'Kegiatan Warga';
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+  }, [albums]);
 
   const filtered = useMemo(() => {
     return albums.filter((album) => {
@@ -118,16 +77,38 @@ export default function GaleriAdminPage() {
       const q = search.toLowerCase();
       const matchQuery =
         !q ||
-        album.judul.toLowerCase().includes(q) ||
-        album.lokasi.toLowerCase().includes(q);
+        String(album.judul || '').toLowerCase().includes(q) ||
+        String(album.lokasi || '').toLowerCase().includes(q);
       return matchCat && matchQuery;
     });
   }, [albums, activeCategory, search]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Hapus album dokumentasi ini?')) return;
-    await adminApi.deleteGaleri(id).catch(() => {});
-    setAlbums((prev) => prev.filter((a) => a.id !== id));
+  const openDeleteModal = (album) => {
+    setDeleteError('');
+    setDeleteTarget(album);
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteError('');
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const deletedTitle = deleteTarget.judul;
+      await adminApi.deleteGaleri(deleteTarget.id);
+      setAlbums((prev) => prev.filter((a) => a.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast.success(`Album "${deletedTitle}" berhasil dihapus.`, 'Galeri Dihapus');
+    } catch (err) {
+      setDeleteError(err.message || 'Gagal menghapus album galeri.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -146,6 +127,27 @@ export default function GaleriAdminPage() {
           </Link>
         </div>
       </div>
+
+      {pageError && (
+        <div
+          role="alert"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            borderRadius: '10px',
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#b91c1c',
+            fontSize: '0.9rem',
+          }}
+        >
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{pageError}</span>
+        </div>
+      )}
 
       <div className="admin-grid-3">
         <div className="admin-stat-card">
@@ -170,8 +172,8 @@ export default function GaleriAdminPage() {
               <Users size={17} />
             </span>
           </div>
-          <div className="admin-stat-value">Kegiatan Warga</div>
-          <p className="admin-stat-hint">Dokumentasi partisipasi masyarakat desa</p>
+          <div className="admin-stat-value">{topCategory}</div>
+          <p className="admin-stat-hint">Dokumentasi terbanyak di portal desa</p>
         </div>
 
         <div className="admin-stat-card">
@@ -188,7 +190,7 @@ export default function GaleriAdminPage() {
         </div>
       </div>
 
-      {/* Filter Pills, Search */}
+      {/* Filter Pills & Search */}
       <div className="admin-filter-strip">
         <div className="admin-search-box">
           <Search size={16} />
@@ -214,52 +216,63 @@ export default function GaleriAdminPage() {
       </div>
 
       {/* Album Grid Card */}
-      <div className="admin-grid-3">
-        {filtered.map((album) => (
-          <article key={album.id} className="admin-album-card">
-            <div className="admin-album-media">
-              <img src={album.cover} alt={album.judul} />
-              <span
-                className={`admin-pill admin-album-status ${
-                  album.status === 'Terbit' ? 'is-success-soft' : 'is-neutral'
-                }`}
-              >
-                • {album.status}
-              </span>
-              <span className="admin-album-count">
-                <Camera size={13} /> {album.jumlahFoto} Foto
-              </span>
-            </div>
-
-            <div className="admin-album-body">
-              <span className="admin-album-cat">{album.kategori.toUpperCase()}</span>
-              <h4>{album.judul}</h4>
-              <p>{album.deskripsi}</p>
-              <div className="admin-album-meta">
-                <span>
-                  <Calendar size={13} /> {album.tanggal}
+      {loading ? (
+        <div className="admin-card" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+          Memuat album galeri...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="admin-card" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+          Belum ada album galeri yang sesuai.
+        </div>
+      ) : (
+        <div className="admin-grid-3">
+          {filtered.map((album) => (
+            <article key={album.id} className="admin-album-card">
+              <div className="admin-album-media">
+                <img src={album.cover || '/images/hero-1.jpg'} alt={album.judul} />
+                <span
+                  className={`admin-pill admin-album-status ${album.status === 'Terbit' ? 'is-success-soft' : 'is-neutral'
+                    }`}
+                >
+                  • {album.status}
                 </span>
-                <span>• {album.lokasi}</span>
+                <span className="admin-album-count">
+                  <Camera size={13} /> {album.jumlahFoto || 0} Foto
+                </span>
               </div>
-            </div>
 
-            <div className="admin-album-foot">
-              <Link to={`/admin/galeri/edit/${album.id}`} className="admin-link-subtle">
-                <Pencil size={14} />
-                <span>Edit Album</span>
-              </Link>
-              <button
-                type="button"
-                onClick={() => handleDelete(album.id)}
-                className="btn-admin-danger-ghost btn-admin-sm"
-              >
-                <Trash2 size={14} />
-                <span>Hapus</span>
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
+              <div className="admin-album-body">
+                <span className="admin-album-cat">
+                  {String(album.kategori || 'Kegiatan Warga').toUpperCase()}
+                </span>
+                <h4>{album.judul}</h4>
+                <p>{album.deskripsi || album.keterangan || 'Dokumentasi kegiatan desa.'}</p>
+                <div className="admin-album-meta">
+                  <span>
+                    <Calendar size={13} /> {album.tanggal}
+                  </span>
+                  <span>• {album.lokasi}</span>
+                </div>
+              </div>
+
+              <div className="admin-album-foot">
+                <Link to={`/admin/galeri/edit/${album.id}`} className="admin-link-subtle">
+                  <Pencil size={14} />
+                  <span>Edit Album</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => openDeleteModal(album)}
+                  className="btn-admin-danger-ghost btn-admin-sm"
+                >
+                  <Trash2 size={14} />
+                  <span>Hapus</span>
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
 
       <div className="admin-callout-success">
         <Info size={18} />
@@ -272,6 +285,27 @@ export default function GaleriAdminPage() {
           </p>
         </div>
       </div>
+
+      {/* Modal Konfirmasi Hapus */}
+      <AdminConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Hapus Album Galeri?"
+        description={
+          deleteTarget && (
+            <>
+              Anda yakin ingin menghapus album{' '}
+              <strong style={{ color: '#0f172a' }}>{deleteTarget.judul}</strong> (
+              {deleteTarget.jumlahFoto || 0} foto)? Data yang dihapus akan hilang permanen dari
+              galeri publik.
+            </>
+          )
+        }
+        confirmLabel="Ya, Hapus Album"
+        loading={deleting}
+        error={deleteError}
+        onConfirm={confirmDelete}
+        onCancel={closeDeleteModal}
+      />
     </div>
   );
 }

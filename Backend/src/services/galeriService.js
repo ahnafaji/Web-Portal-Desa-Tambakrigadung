@@ -2,15 +2,32 @@ import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { uploadToSupabase } from "./storageService.js";
 
+const KATEGORI_MAP = {
+  kegiatan: { key: "kegiatan", label: "Kegiatan Warga" },
+  pembangunan: { key: "pembangunan", label: "Pembangunan" },
+  wisata: { key: "wisata", label: "Wisata & Budaya" },
+  pemerintahan: { key: "pemerintahan", label: "Pemerintahan" },
+};
+
+const normalizeKategori = (val) => {
+  const lower = String(val || "").toLowerCase().trim();
+  if (lower.includes("pembangunan")) return KATEGORI_MAP.pembangunan;
+  if (lower.includes("wisata") || lower.includes("budaya")) return KATEGORI_MAP.wisata;
+  if (lower.includes("pemerintah")) return KATEGORI_MAP.pemerintahan;
+  return KATEGORI_MAP.kegiatan;
+};
+
 const formatGaleri = (g) => {
   const fotos = g.fotos || [];
+  const kat = normalizeKategori(g.kategoriLabel || g.kategori);
+
   return {
     id: g.id,
     slug: g.slug,
     judul: g.judul,
     judulLengkap: g.judulLengkap || g.judul,
-    kategori: g.kategoriLabel || g.kategori,
-    kategoriKey: g.kategori,
+    kategori: kat.label,
+    kategoriKey: kat.key,
     tanggal: new Intl.DateTimeFormat("id-ID", {
       day: "numeric",
       month: "short",
@@ -39,13 +56,6 @@ export const getGaleriList = async (query = {}) => {
   const { kategori, search } = query;
   const where = {};
 
-  if (kategori && kategori !== "Semua" && kategori !== "semua") {
-    where.OR = [
-      { kategori: { equals: kategori, mode: "insensitive" } },
-      { kategoriLabel: { contains: kategori, mode: "insensitive" } },
-    ];
-  }
-
   if (search) {
     where.OR = [
       { judul: { contains: search, mode: "insensitive" } },
@@ -59,7 +69,13 @@ export const getGaleriList = async (query = {}) => {
     orderBy: { tanggal: "desc" },
   });
 
-  return items.map(formatGaleri);
+  let formatted = items.map(formatGaleri);
+  if (kategori && kategori !== "Semua" && kategori !== "semua") {
+    const targetKey = normalizeKategori(kategori).key;
+    formatted = formatted.filter((item) => item.kategoriKey === targetKey);
+  }
+
+  return formatted;
 };
 
 export const getGaleriPage = async () => {
@@ -91,7 +107,7 @@ export const getGaleriPage = async () => {
       { key: "semua", label: "Semua" },
       { key: "kegiatan", label: "Kegiatan Warga" },
       { key: "pembangunan", label: "Pembangunan" },
-      { key: "wisata", label: "Wisata" },
+      { key: "wisata", label: "Wisata & Budaya" },
       { key: "pemerintahan", label: "Pemerintahan" },
     ],
     items: formattedItems,
@@ -112,25 +128,27 @@ export const getGaleriDetail = async (identifier) => {
     throw new AppError("Dokumentasi galeri tidak ditemukan.", 404);
   }
 
-  const related = await prisma.galeri.findMany({
-    where: {
-      id: { not: item.id },
-      kategori: item.kategori,
-    },
-    take: 3,
+  const formatted = formatGaleri(item);
+  const allOther = await prisma.galeri.findMany({
+    where: { id: { not: item.id } },
     include: { fotos: { orderBy: { urutan: "asc" } } },
     orderBy: { tanggal: "desc" },
   });
 
+  const related = allOther
+    .map(formatGaleri)
+    .filter((g) => g.kategoriKey === formatted.kategoriKey)
+    .slice(0, 3);
+
   return {
-    ...formatGaleri(item),
-    item: formatGaleri(item),
-    related: related.map(formatGaleri),
+    ...formatted,
+    item: formatted,
+    related,
   };
 };
 
 export const createGaleri = async (data, files = []) => {
-  let photoUrls = [];
+  const photoUrls = [];
 
   if (files && files.length > 0) {
     for (const file of files) {
@@ -145,6 +163,7 @@ export const createGaleri = async (data, files = []) => {
     .replace(/^-|-$/g, "");
   const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
+  const kat = normalizeKategori(data.kategori);
   const coverImage = photoUrls[0] || data.cover || "/images/hero-1.jpg";
 
   const created = await prisma.galeri.create({
@@ -152,8 +171,8 @@ export const createGaleri = async (data, files = []) => {
       slug,
       judul: data.judul,
       judulLengkap: data.judulLengkap || data.judul,
-      kategori: (data.kategori || "kegiatan").toLowerCase().replace(/\s+/g, "-"),
-      kategoriLabel: data.kategori || "Kegiatan Warga",
+      kategori: kat.key,
+      kategoriLabel: kat.label,
       tanggal: data.tanggal ? new Date(data.tanggal) : new Date(),
       lokasi: data.lokasi || "Desa Tambakrigadung",
       dokumentator: data.dokumentator || "Humas & Pamong Desa",
@@ -185,7 +204,7 @@ export const updateGaleri = async (id, data, files = []) => {
     throw new AppError("Album galeri tidak ditemukan.", 404);
   }
 
-  let photoUrls = [];
+  const photoUrls = [];
   if (files && files.length > 0) {
     for (const file of files) {
       const url = await uploadToSupabase(file, "galeri");
@@ -199,8 +218,9 @@ export const updateGaleri = async (id, data, files = []) => {
     updateData.judulLengkap = data.judulLengkap || data.judul;
   }
   if (data.kategori) {
-    updateData.kategoriLabel = data.kategori;
-    updateData.kategori = data.kategori.toLowerCase().replace(/\s+/g, "-");
+    const kat = normalizeKategori(data.kategori);
+    updateData.kategori = kat.key;
+    updateData.kategoriLabel = kat.label;
   }
   if (data.tanggal) updateData.tanggal = new Date(data.tanggal);
   if (data.lokasi) updateData.lokasi = data.lokasi;
@@ -208,10 +228,25 @@ export const updateGaleri = async (id, data, files = []) => {
     updateData.image = photoUrls[0];
   }
 
+  if (data.keterangan !== undefined || data.deskripsi !== undefined || data.tanggal || data.lokasi) {
+    const prevRingkasan =
+      existing.ringkasan && typeof existing.ringkasan === "object" ? existing.ringkasan : {};
+    updateData.ringkasan = {
+      ...prevRingkasan,
+      tanggal: data.tanggal || prevRingkasan.tanggal || new Date().toISOString().slice(0, 10),
+      lokasi: data.lokasi || prevRingkasan.lokasi || existing.lokasi,
+      capaian:
+        data.keterangan !== undefined
+          ? data.keterangan
+          : data.deskripsi !== undefined
+            ? data.deskripsi
+            : prevRingkasan.capaian || "",
+    };
+  }
+
   await prisma.galeri.update({
     where: { id },
     data: updateData,
-    include: { fotos: true },
   });
 
   if (photoUrls.length > 0) {
@@ -234,5 +269,11 @@ export const updateGaleri = async (id, data, files = []) => {
 };
 
 export const deleteGaleri = async (id) => {
+  const existing = await prisma.galeri.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Album galeri tidak ditemukan.", 404);
+  }
+
+  await prisma.galeriFoto.deleteMany({ where: { galeriId: id } });
   return prisma.galeri.delete({ where: { id } });
 };
