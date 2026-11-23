@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { AdminToastProvider } from '../../context/AdminToastContext';
 import '../../styles/admin.css';
 
 const NAV_GROUPS = [
@@ -82,113 +83,115 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="admin-shell">
-      {sidebarOpen && (
-        <div className="admin-backdrop" onClick={() => setSidebarOpen(false)} />
-      )}
+    <AdminToastProvider>
+      <div className="admin-shell">
+        {sidebarOpen && (
+          <div className="admin-backdrop" onClick={() => setSidebarOpen(false)} />
+        )}
 
-      <aside className={`admin-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
-        <div className="admin-brand">
-          <div className="admin-brand-icon">
-            <img
-              src={`${import.meta.env.BASE_URL}images/logo-kecamatan.png`}
-              alt="Logo Kecamatan Tikung"
-            />
-          </div>
-          <div className="admin-brand-text">
-            <strong>Desa Tambakrigadung</strong>
-            <span>PANEL ADMIN</span>
-          </div>
-          <button
-            type="button"
-            className="admin-mobile-close"
-            onClick={() => setSidebarOpen(false)}
-            aria-label="Tutup menu"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <nav className="admin-nav">
-          {NAV_GROUPS.map((group) => (
-            <div key={group.label} className="admin-nav-group">
-              <p className="admin-nav-label">{group.label}</p>
-              {group.items.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) =>
-                      `admin-nav-link ${isActive ? 'is-active' : ''}`
-                    }
-                  >
-                    <Icon size={17} />
-                    <span>{item.label}</span>
-                    {item.badge ? (
-                      <span className="admin-nav-badge">{item.badge}</span>
-                    ) : null}
-                  </NavLink>
-                );
-              })}
+        <aside className={`admin-sidebar ${sidebarOpen ? 'is-open' : ''}`}>
+          <div className="admin-brand">
+            <div className="admin-brand-icon">
+              <img
+                src={`${import.meta.env.BASE_URL}images/logo-kecamatan.png`}
+                alt="Logo Kecamatan Tikung"
+              />
             </div>
-          ))}
-        </nav>
-
-        <div className="admin-sidebar-footer">
-          <div className="admin-user-avatar">
-            <User size={16} />
-          </div>
-          <div className="admin-user-meta">
-            <strong>Admin Desa</strong>
-            <span>Operator Utama</span>
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="admin-icon-btn"
-            title="Keluar"
-          >
-            <LogOut size={16} />
-          </button>
-        </div>
-      </aside>
-
-      <div className="admin-main">
-        <header className="admin-topbar">
-          <div className="admin-topbar-left">
+            <div className="admin-brand-text">
+              <strong>Desa Tambakrigadung</strong>
+              <span>PANEL ADMIN</span>
+            </div>
             <button
               type="button"
-              className="admin-mobile-trigger"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Buka menu"
+              className="admin-mobile-close"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Tutup menu"
             >
-              <Menu size={20} />
+              <X size={18} />
             </button>
-            <h1 className="admin-topbar-title">{currentTitle}</h1>
           </div>
 
-          <div className="admin-topbar-right">
-            <a
-              href="/"
-              target="_blank"
-              rel="noreferrer"
-              className="btn-admin-outline btn-admin-sm"
-            >
-              <span>Lihat Website</span>
-              <ExternalLink size={14} />
-            </a>
-            <div className="admin-topbar-avatar">
+          <nav className="admin-nav">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label} className="admin-nav-group">
+                <p className="admin-nav-label">{group.label}</p>
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) =>
+                        `admin-nav-link ${isActive ? 'is-active' : ''}`
+                      }
+                    >
+                      <Icon size={17} />
+                      <span>{item.label}</span>
+                      {item.badge ? (
+                        <span className="admin-nav-badge">{item.badge}</span>
+                      ) : null}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            ))}
+          </nav>
+
+          <div className="admin-sidebar-footer">
+            <div className="admin-user-avatar">
               <User size={16} />
             </div>
+            <div className="admin-user-meta">
+              <strong>Admin Desa</strong>
+              <span>Operator Utama</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="admin-icon-btn"
+              title="Keluar"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
-        </header>
+        </aside>
 
-        <main className="admin-content">
-          <Outlet />
-        </main>
+        <div className="admin-main">
+          <header className="admin-topbar">
+            <div className="admin-topbar-left">
+              <button
+                type="button"
+                className="admin-mobile-trigger"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Buka menu"
+              >
+                <Menu size={20} />
+              </button>
+              <h1 className="admin-topbar-title">{currentTitle}</h1>
+            </div>
+
+            <div className="admin-topbar-right">
+              <a
+                href="/"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-admin-outline btn-admin-sm"
+              >
+                <span>Lihat Website</span>
+                <ExternalLink size={14} />
+              </a>
+              <div className="admin-topbar-avatar">
+                <User size={16} />
+              </div>
+            </div>
+          </header>
+
+          <main className="admin-content">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </AdminToastProvider>
   );
 }

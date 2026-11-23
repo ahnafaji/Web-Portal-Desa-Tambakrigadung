@@ -17,8 +17,22 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { adminApi, exportToCsv } from '../../services/adminApi';
+import { useAdminToast } from '../../context/AdminToastContext';
+
+const KATEGORI_OPTIONS = [
+  { value: 'pangan', label: 'Pangan & Kudapan' },
+  { value: 'olahan', label: 'Olahan Tambak & Madu' },
+  { value: 'kerajinan', label: 'Batik & Kerajinan' },
+  { value: 'jasa', label: 'Fabrikasi & Jasa' },
+];
+
+const getKategoriLabel = (key) => {
+  const found = KATEGORI_OPTIONS.find((k) => k.value === String(key || '').toLowerCase());
+  return found ? found.label : key || '-';
+};
 
 export default function UmkmAdminPage() {
+  const toast = useAdminToast();
   const [umkmList, setUmkmList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState('');
@@ -51,7 +65,7 @@ export default function UmkmAdminPage() {
     fetchUmkm();
   }, []);
 
-  // Tutup modal dengan tombol Escape
+  // Tutup modal konfirmasi dengan Escape
   useEffect(() => {
     if (!deleteTarget) return;
     const onKeyDown = (e) => {
@@ -70,10 +84,7 @@ export default function UmkmAdminPage() {
       menunggu: umkmList.filter((u) => u.status === 'Menunggu').length,
       aktif: umkmList.filter((u) => u.status === 'Aktif').length,
       ditolak: umkmList.filter((u) => u.status === 'Ditolak').length,
-      kuliner: umkmList.filter((u) =>
-        String(u.kategori || '').toLowerCase().includes('kuliner') ||
-        String(u.kategori || '').toLowerCase().includes('pangan')
-      ).length,
+      pangan: umkmList.filter((u) => String(u.kategori || '').toLowerCase() === 'pangan').length,
     }),
     [umkmList]
   );
@@ -94,11 +105,12 @@ export default function UmkmAdminPage() {
     });
   }, [umkmList, statusTab, kategoriFilter, search]);
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (item) => {
     setPageError('');
     try {
-      await adminApi.updateUmkmStatus(id, 'Aktif');
-      setUmkmList((prev) => prev.map((u) => (u.id === id ? { ...u, status: 'Aktif' } : u)));
+      await adminApi.updateUmkmStatus(item.id, 'Aktif');
+      setUmkmList((prev) => prev.map((u) => (u.id === item.id ? { ...u, status: 'Aktif' } : u)));
+      toast.success(`"${item.namaUsaha}" telah disetujui dan tayang di portal publik.`, 'UMKM Disetujui');
     } catch (err) {
       setPageError(err.message || 'Gagal menyetujui UMKM.');
     }
@@ -120,9 +132,11 @@ export default function UmkmAdminPage() {
     setDeleting(true);
     setDeleteError('');
     try {
+      const deletedName = deleteTarget.namaUsaha;
       await adminApi.deleteUmkm(deleteTarget.id);
       setUmkmList((prev) => prev.filter((u) => u.id !== deleteTarget.id));
       setDeleteTarget(null);
+      toast.success(`Data UMKM "${deletedName}" berhasil dihapus.`, 'UMKM Dihapus');
     } catch (err) {
       setDeleteError(err.message || 'Gagal menghapus data UMKM. Pastikan Anda login sebagai Super Admin.');
     } finally {
@@ -204,12 +218,12 @@ export default function UmkmAdminPage() {
 
         <div className="admin-stat-card">
           <div className="admin-stat-top">
-            <span className="admin-stat-label">SEKTOR KULINER</span>
+            <span className="admin-stat-label">PANGAN &amp; KUDAPAN</span>
             <span className="admin-stat-icon is-info">
               <Utensils size={17} />
             </span>
           </div>
-          <div className="admin-stat-value">{stats.kuliner}</div>
+          <div className="admin-stat-value">{stats.pangan}</div>
           <p className="admin-stat-hint">Komoditas dominan</p>
         </div>
 
@@ -261,11 +275,11 @@ export default function UmkmAdminPage() {
             className="admin-select"
           >
             <option value="Semua">Semua Kategori</option>
-            <option value="Kuliner">Kuliner</option>
-            <option value="Pertanian">Pertanian</option>
-            <option value="Perikanan">Perikanan</option>
-            <option value="Kerajinan">Kerajinan</option>
-            <option value="Jasa">Jasa</option>
+            {KATEGORI_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -313,7 +327,9 @@ export default function UmkmAdminPage() {
                       </div>
                     </td>
                     <td>
-                      <span className="admin-pill is-neutral">{item.kategori}</span>
+                      <span className="admin-pill is-neutral">
+                        {item.kategoriLabel || getKategoriLabel(item.kategori)}
+                      </span>
                     </td>
                     <td>{item.dusun}</td>
                     <td className="text-muted">{item.tanggal}</td>
@@ -334,7 +350,7 @@ export default function UmkmAdminPage() {
                         {item.status === 'Menunggu' && (
                           <button
                             type="button"
-                            onClick={() => handleApprove(item.id)}
+                            onClick={() => handleApprove(item)}
                             className="btn-admin-primary btn-admin-sm"
                             title="Setujui & Tayangkan"
                           >

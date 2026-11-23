@@ -2,6 +2,37 @@ import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { uploadToSupabase } from "./storageService.js";
 
+const KATEGORI_LIST = {
+  pangan: { key: "pangan", label: "Pangan & Kudapan" },
+  olahan: { key: "olahan", label: "Olahan Tambak & Madu" },
+  kerajinan: { key: "kerajinan", label: "Batik & Kerajinan" },
+  jasa: { key: "jasa", label: "Fabrikasi & Jasa" },
+};
+
+const normalizeKategori = (val) => {
+  const lower = String(val || "").toLowerCase().trim();
+  if (lower === "pangan" || lower.includes("pangan") || lower.includes("kuliner") || lower.includes("kudapan")) {
+    return KATEGORI_LIST.pangan;
+  }
+  if (
+    lower === "olahan" ||
+    lower.includes("olahan") ||
+    lower.includes("tambak") ||
+    lower.includes("madu") ||
+    lower.includes("ikan") ||
+    lower.includes("tani")
+  ) {
+    return KATEGORI_LIST.olahan;
+  }
+  if (lower === "kerajinan" || lower.includes("batik") || lower.includes("rajin")) {
+    return KATEGORI_LIST.kerajinan;
+  }
+  if (lower === "jasa" || lower.includes("fabrikasi") || lower.includes("dagang")) {
+    return KATEGORI_LIST.jasa;
+  }
+  return KATEGORI_LIST.pangan;
+};
+
 // Helper map enum
 const mapStatusToDb = (status) => {
   if (!status) return undefined;
@@ -22,6 +53,7 @@ const mapStatusToFrontend = (status) => {
 const formatUmkmItem = (u) => {
   const min = u.hargaMin ? Number(u.hargaMin) : 0;
   const max = u.hargaMax ? Number(u.hargaMax) : 0;
+  const kat = normalizeKategori(u.kategori || u.kategoriLabel);
 
   let deskripsiLengkapArr = [];
   if (Array.isArray(u.deskripsiLengkap) && u.deskripsiLengkap.length > 0) {
@@ -80,9 +112,9 @@ const formatUmkmItem = (u) => {
     pemilik: u.pemilik,
     telepon: u.whatsapp,
     whatsapp: u.whatsapp,
-    kategori: u.kategori,
-    kategoriLabel: u.kategoriLabel || u.kategori,
-    kategoriKey: u.kategori,
+    kategori: kat.key,
+    kategoriLabel: kat.label,
+    kategoriKey: kat.key,
     badgeUtama: u.badgeUtama || "USAHA DESA",
     ratingLabel: u.ratingLabel || null,
     statusBuka: u.statusBuka || (u.jamOperasional ? `Buka (${u.jamOperasional})` : "Buka"),
@@ -139,13 +171,6 @@ export const getUmkmList = async ({ limit, kategori, status, q }) => {
     where.status = "APPROVED";
   }
 
-  if (kategori && kategori !== "semua" && kategori !== "Semua") {
-    where.OR = [
-      { kategori: { equals: kategori, mode: "insensitive" } },
-      { kategoriLabel: { contains: kategori, mode: "insensitive" } },
-    ];
-  }
-
   if (q) {
     where.OR = [
       { nama: { contains: q, mode: "insensitive" } },
@@ -158,12 +183,17 @@ export const getUmkmList = async ({ limit, kategori, status, q }) => {
 
   const items = await prisma.umkm.findMany({
     where,
-    take,
     include: { menus: { orderBy: { urutan: "asc" } } },
     orderBy: { createdAt: "desc" },
   });
 
-  return items.map(formatUmkmItem);
+  let formatted = items.map(formatUmkmItem);
+  if (kategori && kategori !== "semua" && kategori !== "Semua") {
+    const targetKey = normalizeKategori(kategori).key;
+    formatted = formatted.filter((item) => item.kategori === targetKey);
+  }
+
+  return take ? formatted.slice(0, take) : formatted;
 };
 
 /**
@@ -175,13 +205,6 @@ export const getAdminUmkmList = async (query = {}) => {
 
   if (status && status !== "Semua") {
     where.status = mapStatusToDb(status);
-  }
-
-  if (kategori && kategori !== "Semua") {
-    where.OR = [
-      { kategori: { equals: kategori, mode: "insensitive" } },
-      { kategoriLabel: { contains: kategori, mode: "insensitive" } },
-    ];
   }
 
   if (search) {
@@ -198,16 +221,23 @@ export const getAdminUmkmList = async (query = {}) => {
     orderBy: { createdAt: "desc" },
   });
 
-  return items.map(formatUmkmItem);
+  let formatted = items.map(formatUmkmItem);
+  if (kategori && kategori !== "Semua" && kategori !== "semua") {
+    const targetKey = normalizeKategori(kategori).key;
+    formatted = formatted.filter((item) => item.kategori === targetKey);
+  }
+
+  return formatted;
 };
 
 export const getUmkmPage = async () => {
-  const items = await prisma.umkm.findMany({
+  const rawItems = await prisma.umkm.findMany({
     where: { status: "APPROVED" },
     include: { menus: { orderBy: { urutan: "asc" } } },
     orderBy: { tanggal: "desc" },
   });
 
+  const items = rawItems.map(formatUmkmItem);
   const featured = items[0] || null;
 
   return {
@@ -331,17 +361,21 @@ export const getUmkmDetail = async (identifier) => {
     throw new AppError("Profil usaha UMKM tidak ditemukan.", 404);
   }
 
-  const related = await prisma.umkm.findMany({
+  const formattedItem = formatUmkmItem(item);
+  const allApproved = await prisma.umkm.findMany({
     where: {
       status: "APPROVED",
       id: { not: item.id },
-      kategori: item.kategori,
     },
-    take: 3,
     orderBy: { tanggal: "desc" },
   });
 
-  return { item: formatUmkmItem(item), related: related.map(formatUmkmItem) };
+  const related = allApproved
+    .map(formatUmkmItem)
+    .filter((u) => u.kategori === formattedItem.kategori)
+    .slice(0, 3);
+
+  return { item: formattedItem, related };
 };
 
 export const createUmkm = async (data, files = []) => {
@@ -367,6 +401,7 @@ export const createUmkm = async (data, files = []) => {
       ? cleanWa
       : `62${cleanWa}`;
 
+  const kat = normalizeKategori(data.kategori);
   const statusDb = mapStatusToDb(data.status) || "APPROVED";
   const minVal = data.hargaMin ? parseFloat(String(data.hargaMin).replace(/\D/g, "")) : null;
   const maxVal = data.hargaMax ? parseFloat(String(data.hargaMax).replace(/\D/g, "")) : null;
@@ -375,8 +410,8 @@ export const createUmkm = async (data, files = []) => {
     data: {
       slug,
       nama: data.namaUsaha || data.nama,
-      kategori: data.kategori || "Kuliner",
-      kategoriLabel: data.kategori || "Kuliner & Kudapan",
+      kategori: kat.key,
+      kategoriLabel: kat.label,
       badgeUtama: "USAHA WARGA",
       jamOperasional: data.jamOperasional || "Setiap Hari",
       statusBuka: data.jamOperasional ? `Buka (${data.jamOperasional})` : "Buka",
@@ -427,8 +462,9 @@ export const updateUmkm = async (id, data, files = []) => {
   const updatePayload = {};
   if (data.namaUsaha || data.nama) updatePayload.nama = data.namaUsaha || data.nama;
   if (data.kategori) {
-    updatePayload.kategori = data.kategori;
-    updatePayload.kategoriLabel = data.kategori;
+    const kat = normalizeKategori(data.kategori);
+    updatePayload.kategori = kat.key;
+    updatePayload.kategoriLabel = kat.label;
   }
   if (data.pemilik || data.namaPemilik) updatePayload.pemilik = data.pemilik || data.namaPemilik;
   if (data.whatsapp || data.telepon) {
@@ -509,7 +545,6 @@ export const deleteUmkm = async (id) => {
     throw new AppError("Data UMKM tidak ditemukan.", 404);
   }
 
-  // Bersihkan relasi menu terlebih dahulu agar aman dari foreign key constraint
   await prisma.umkm.update({
     where: { id },
     data: { menus: { deleteMany: {} } },
@@ -554,12 +589,16 @@ export const registerUmkmPublic = async (data, files) => {
       ? cleanWa
       : `62${cleanWa}`;
 
+  const kat = normalizeKategori(data.kategori);
+  const minVal = data.hargaMin ? parseFloat(data.hargaMin.replace(/\D/g, "")) : null;
+  const maxVal = data.hargaMax ? parseFloat(data.hargaMax.replace(/\D/g, "")) : null;
+
   const created = await prisma.umkm.create({
     data: {
       slug,
       nama: data.namaUsaha,
-      kategori: data.kategori,
-      kategoriLabel: data.kategori,
+      kategori: kat.key,
+      kategoriLabel: kat.label,
       badgeUtama: "USAHA WARGA",
       jamOperasional: data.jamOperasional || "Setiap Hari",
       statusBuka: data.jamOperasional ? `Buka (${data.jamOperasional})` : "Buka",
@@ -567,10 +606,15 @@ export const registerUmkmPublic = async (data, files) => {
       alamat: data.alamat,
       pemilik: data.namaPemilik,
       whatsapp: normalizedWa,
-      hargaMin: data.hargaMin ? parseFloat(data.hargaMin.replace(/\D/g, "")) : null,
-      hargaMax: data.hargaMax ? parseFloat(data.hargaMax.replace(/\D/g, "")) : null,
+      hargaMin: minVal,
+      hargaMax: maxVal,
       hargaLabel:
-        data.hargaMin && data.hargaMax ? `Rp ${data.hargaMin} – Rp ${data.hargaMax}` : "Harga Menyesuaikan",
+        minVal && maxVal
+          ? `Rp ${minVal.toLocaleString("id-ID")} – Rp ${maxVal.toLocaleString("id-ID")}`
+          : minVal
+            ? `Mulai Rp ${minVal.toLocaleString("id-ID")}`
+            : "Harga Menyesuaikan",
+      hargaMulai: minVal ? `Rp ${minVal.toLocaleString("id-ID")}` : "Menyesuaikan",
       image: photoUrls[0],
       galeri: photoUrls,
       ringkasan: data.deskripsi.slice(0, 150) + (data.deskripsi.length > 150 ? "..." : ""),

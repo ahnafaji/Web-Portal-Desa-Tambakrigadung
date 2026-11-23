@@ -3,18 +3,37 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Check, MapPin, UploadCloud, X, Lightbulb, AlertCircle } from 'lucide-react';
 import { adminApi } from '../../services/adminApi';
+import { useAdminToast } from '../../context/AdminToastContext';
 
-const KATEGORI_OPTIONS = ['Kuliner', 'Pertanian', 'Perikanan', 'Kerajinan', 'Jasa'];
+const KATEGORI_OPTIONS = [
+  { value: 'pangan', label: 'Pangan & Kudapan' },
+  { value: 'olahan', label: 'Olahan Tambak & Madu' },
+  { value: 'kerajinan', label: 'Batik & Kerajinan' },
+  { value: 'jasa', label: 'Fabrikasi & Jasa' },
+];
 
 const normalizeKategori = (val = '') => {
-  const lower = String(val).toLowerCase();
-  if (lower.includes('kuliner') || lower.includes('pangan') || lower.includes('olahan')) return 'Kuliner';
-  if (lower.includes('tani') || lower.includes('kebun')) return 'Pertanian';
-  if (lower.includes('ikan') || lower.includes('tambak')) return 'Perikanan';
-  if (lower.includes('rajin') || lower.includes('batik')) return 'Kerajinan';
-  if (lower.includes('jasa') || lower.includes('dagang') || lower.includes('fabrikasi')) return 'Jasa';
-  const exact = KATEGORI_OPTIONS.find((opt) => opt.toLowerCase() === lower);
-  return exact || '';
+  const lower = String(val).toLowerCase().trim();
+  if (lower === 'pangan' || lower.includes('pangan') || lower.includes('kuliner') || lower.includes('kudapan')) {
+    return 'pangan';
+  }
+  if (
+    lower === 'olahan' ||
+    lower.includes('olahan') ||
+    lower.includes('tambak') ||
+    lower.includes('madu') ||
+    lower.includes('ikan') ||
+    lower.includes('tani')
+  ) {
+    return 'olahan';
+  }
+  if (lower === 'kerajinan' || lower.includes('batik') || lower.includes('rajin')) {
+    return 'kerajinan';
+  }
+  if (lower === 'jasa' || lower.includes('fabrikasi') || lower.includes('dagang')) {
+    return 'jasa';
+  }
+  return '';
 };
 
 const stripCountryCode = (wa = '') => {
@@ -28,6 +47,7 @@ export default function UmkmFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const toast = useAdminToast();
 
   const [form, setForm] = useState({
     namaUsaha: '',
@@ -154,8 +174,10 @@ export default function UmkmFormPage() {
 
       if (isEdit) {
         await adminApi.updateUmkm(id, fd);
+        toast.success(`Perubahan pada "${form.namaUsaha}" berhasil disimpan.`, 'Perubahan Tersimpan');
       } else {
         await adminApi.createUmkm(fd);
+        toast.success(`Data UMKM "${form.namaUsaha}" berhasil ditambahkan.`, 'UMKM Ditambahkan');
       }
       navigate('/admin/umkm');
     } catch (err) {
@@ -243,12 +265,12 @@ export default function UmkmFormPage() {
               <div className="admin-field">
                 <label>Kategori Usaha *</label>
                 <select name="kategori" required value={form.kategori} onChange={handleChange}>
-                  <option value="">Pilih kategori bidang usaha</option>
-                  <option value="Kuliner">Kuliner &amp; Olahan Pangan</option>
-                  <option value="Pertanian">Pertanian &amp; Perkebunan</option>
-                  <option value="Perikanan">Perikanan &amp; Tambak</option>
-                  <option value="Kerajinan">Kerajinan Tangan</option>
-                  <option value="Jasa">Jasa &amp; Perdagangan</option>
+                  <option value="">Pilih Kategori Bidang</option>
+                  {KATEGORI_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="admin-field">
