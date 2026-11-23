@@ -31,8 +31,15 @@ export const uploadToSupabase = async (file, folder = "uploads") => {
 
   if (error) {
     // eslint-disable-next-line no-console
-    console.error("Supabase Storage Upload Error:", error);
-    throw new AppError(`Gagal mengunggah berkas ke penyimpanan awan: ${error.message}`, 500);
+    console.error("Supabase Storage Upload Error:", error.message);
+    // Jika bucket tidak ditemukan atau akses ditolak, lempar error deskriptif
+    if (error.message?.includes("Bucket not found") || error.statusCode === 404) {
+      throw new AppError(
+        `Bucket penyimpanan "${env.SUPABASE_STORAGE_BUCKET}" belum dibuat. Buat bucket di Supabase Dashboard → Storage.`,
+        500
+      );
+    }
+    throw new AppError(`Gagal mengunggah berkas: ${error.message}`, 500);
   }
 
   const { data: publicData } = supabase.storage

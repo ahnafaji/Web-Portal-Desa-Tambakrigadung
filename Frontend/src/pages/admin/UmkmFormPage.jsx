@@ -70,7 +70,7 @@ export default function UmkmFormPage() {
     setSubmitting(true);
     try {
       const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      Object.entries(form).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== '') fd.append(k, v); });
       photos.forEach((p) => p.file && fd.append('fotos', p.file));
 
       if (isEdit) {

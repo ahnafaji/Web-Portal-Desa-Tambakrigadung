@@ -12,69 +12,9 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../services/adminapi';
 
-const INITIAL_COMPLAINTS = [
-  {
-    id: 'ADU-2026-084',
-    pelapor: 'Bambang Sutrisno',
-    inisial: 'BS',
-    telepon: '0812-3456-7890',
-    dusun: 'Dusun Krajan RT 02 / RW 01',
-    kategori: 'Aspirasi Pembangunan',
-    subjek: 'Saluran Air Mampet & Rusak di Dekat Jembatan Krajan',
-    ringkasan:
-      'Selamat pagi pamong Desa Tambakrigadung. Kami warga RT 02 Dusun Krajan ingin menyampaikan bahwa saluran drainase di samping jembatan utama saat ini tersumbat tumpukan ranting dan sedimentasi lumpur tebal setelah hujan lebat kemarin malam. Akibatnya genangan air mulai meluap ke badan jalan paving desa. Mohon kiranya dapat ditinjau dan dibantu koordinasi alat kerja bakti atau normalisasi oleh tim desa. Terima kasih.',
-    tanggal: '20 Feb 2026, 10:15 WIB',
-    urgensi: 'Cukup Mendesak',
-    status: 'Menunggu',
-    foto: '/images/hero-1.jpg',
-    fotoSize: '1.8 MB',
-  },
-  {
-    id: 'ADU-2026-083',
-    pelapor: 'Siti Nurjanah',
-    inisial: 'SN',
-    telepon: '0821-8876-1234',
-    dusun: 'Dusun Melik RT 01 / RW 02',
-    kategori: 'Pengaduan Layanan',
-    subjek: 'Keterlambatan Pengantar Surat Keterangan Usaha',
-    ringkasan:
-      'Sudah 3 hari berkas diajukan melalui loket pelayanan namun belum ada konfirmasi jadwal pengambilan.',
-    tanggal: '19 Feb 2026, 14:20 WIB',
-    urgensi: 'Normal',
-    status: 'Menunggu',
-  },
-  {
-    id: 'ADU-2026-082',
-    pelapor: 'Joko Prayitno',
-    inisial: 'JP',
-    telepon: '0857-3322-5544',
-    dusun: 'Dusun Tambakboyo',
-    kategori: 'Infrastruktur',
-    subjek: 'Lampu Penerangan Jalan Utama Mati Total',
-    ringkasan:
-      'Tiang nomor 4 dan 5 di ruas jalan makam padam sejak tiga hari terakhir dan membahayakan pengendara malam.',
-    tanggal: '18 Feb 2026, 19:40 WIB',
-    urgensi: 'Mendesak',
-    status: 'Diproses',
-  },
-  {
-    id: 'ADU-2026-081',
-    pelapor: 'Hendra Saputra',
-    inisial: 'HS',
-    telepon: '0813-7788-9900',
-    dusun: 'Dusun Krajan',
-    kategori: 'Keamanan & Ketertiban',
-    subjek: 'Permohonan Penertiban Hewan Ternak Berkeliaran',
-    ringkasan:
-      'Ternak kambing liar tanpa gembala kerap masuk ke area tanaman pangan warga di blok selatan.',
-    tanggal: '16 Feb 2026, 08:50 WIB',
-    urgensi: 'Normal',
-    status: 'Selesai',
-  },
-];
-
 export default function PengaduanAdminPage() {
-  const [items, setItems] = useState(INITIAL_COMPLAINTS);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Semua');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState(null);
@@ -85,9 +25,15 @@ export default function PengaduanAdminPage() {
     adminApi
       .getPengaduan()
       .then((res) => {
-        if (Array.isArray(res) && res.length) setItems(res);
+        if (Array.isArray(res)) setItems(res);
+        else if (res && Array.isArray(res.items)) setItems(res.items);
+        else setItems([]);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Gagal memuat daftar pengaduan:', err);
+        setItems([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const counts = useMemo(
@@ -236,7 +182,20 @@ export default function PengaduanAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map((item) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-8 text-muted">
+                    Memuat data pengaduan...
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-8 text-muted">
+                    Belum ada laporan pengaduan warga.
+                  </td>
+                </tr>
+              ) : (
+                filteredItems.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <div className="cell-avatar-row">
@@ -282,7 +241,7 @@ export default function PengaduanAdminPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
           </table>
         </div>

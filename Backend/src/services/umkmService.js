@@ -2,19 +2,191 @@ import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { uploadToSupabase } from "./storageService.js";
 
-export const getUmkmList = async ({ limit, kategori }) => {
-  const where = { status: "APPROVED" };
-  if (kategori && kategori !== "semua") {
-    where.kategori = kategori;
+// Helper map enum
+const mapStatusToDb = (status) => {
+  if (!status) return undefined;
+  const s = status.toLowerCase();
+  if (s === "menunggu" || s === "pending") return "PENDING";
+  if (s === "aktif" || s === "approved") return "APPROVED";
+  if (s === "ditolak" || s === "rejected") return "REJECTED";
+  return status.toUpperCase();
+};
+
+const mapStatusToFrontend = (status) => {
+  if (status === "PENDING") return "Menunggu";
+  if (status === "APPROVED") return "Aktif";
+  if (status === "REJECTED") return "Ditolak";
+  return status;
+};
+
+const formatUmkmItem = (u) => {
+  const min = u.hargaMin ? Number(u.hargaMin) : 0;
+  const max = u.hargaMax ? Number(u.hargaMax) : 0;
+
+  let deskripsiLengkapArr = [];
+  if (Array.isArray(u.deskripsiLengkap) && u.deskripsiLengkap.length > 0) {
+    deskripsiLengkapArr = u.deskripsiLengkap;
+  } else if (typeof u.deskripsiLengkap === "string" && u.deskripsiLengkap.trim()) {
+    deskripsiLengkapArr = [u.deskripsiLengkap.trim()];
+  } else if (u.ringkasan) {
+    deskripsiLengkapArr = [u.ringkasan];
+  } else {
+    deskripsiLengkapArr = ["Informasi profil usaha desa."];
   }
+
+  const menusFormatted = (u.menus || []).map((m) => ({
+    id: m.id,
+    badge: m.badge || "Menu Pilihan",
+    nama: m.nama,
+    deskripsi: m.deskripsi || "",
+    harga: m.harga,
+    urutan: m.urutan,
+  }));
+
+  let petunjukArahObj = u.petunjukArah;
+  if (typeof petunjukArahObj === "string") {
+    try {
+      petunjukArahObj = JSON.parse(petunjukArahObj);
+    } catch {
+      petunjukArahObj = { deskripsi: petunjukArahObj, fasilitas: [] };
+    }
+  }
+  if (!petunjukArahObj || typeof petunjukArahObj !== "object") {
+    petunjukArahObj = {
+      deskripsi: u.patokanLokasi || `Berada di wilayah ${u.dusun || 'Desa Tambakrigadung'}, akses jalan desa mudah dijangkau.`,
+      fasilitas: ["Parkir Kendaraan", "Akses Jalan Utama", "Pelayanan Ramah"],
+    };
+  }
+  if (!Array.isArray(petunjukArahObj.fasilitas)) {
+    petunjukArahObj.fasilitas = ["Parkir Kendaraan", "Akses Jalan Utama"];
+  }
+
+  const defaultMapsHref = u.mapsHref || (u.alamat ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${u.nama} ${u.alamat} Tambakrigadung Tikung Lamongan`)}` : "https://maps.google.com");
+  const defaultEmbed = u.mapEmbedUrl || "https://www.google.com/maps?q=Tambakrigadung,+Tikung,+Lamongan+Regency,+East+Java&output=embed";
+
+  return {
+    id: u.id,
+    slug: u.slug,
+    namaUsaha: u.nama,
+    nama: u.nama,
+    pemilik: u.pemilik,
+    telepon: u.whatsapp,
+    whatsapp: u.whatsapp,
+    kategori: u.kategori,
+    kategoriLabel: u.kategoriLabel || u.kategori,
+    kategoriKey: u.kategori,
+    badgeUtama: u.badgeUtama || "USAHA DESA",
+    ratingLabel: u.ratingLabel || null,
+    statusBuka: u.statusBuka || (u.jamOperasional ? `Buka (${u.jamOperasional})` : "Buka"),
+    jamOperasional: u.jamOperasional || "Setiap Hari, 08.00 – 17.00 WIB",
+    dusun: u.dusun || "Desa Tambakrigadung",
+    alamat: u.alamat || "Desa Tambakrigadung, Kec. Tikung, Kab. Lamongan",
+    patokanLokasi: u.patokanLokasi || `${u.dusun || 'Desa Tambakrigadung'} (Akses Jalan Utama)`,
+    pembayaran: u.pembayaran || "Tunai / Transfer",
+    hargaLabel: u.hargaLabel || (min && max ? `Rp ${min.toLocaleString("id-ID")} – Rp ${max.toLocaleString("id-ID")}` : "Harga Menyesuaikan"),
+    hargaSatuan: u.hargaSatuan || "/ porsi",
+    hargaBadge: u.hargaBadge || null,
+    hargaMulai: u.hargaMulai || (min ? `Rp ${min.toLocaleString("id-ID")}` : "Menyesuaikan"),
+    hargaMin: min,
+    hargaMax: max,
+    mapsUrl: defaultMapsHref,
+    mapsHref: defaultMapsHref,
+    mapEmbedUrl: defaultEmbed,
+    petunjukArah: petunjukArahObj,
+    deskripsi: u.ringkasan || deskripsiLengkapArr[0] || "",
+    ringkasan: u.ringkasan || deskripsiLengkapArr[0] || "",
+    deskripsiLengkap: deskripsiLengkapArr,
+    catatanMenu: u.catatanMenu || null,
+    tanggal: new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(u.tanggal || u.createdAt)),
+    status: mapStatusToFrontend(u.status),
+    rawStatus: u.status,
+    foto: u.image || "/images/hero-1.jpg",
+    image: u.image || "/images/hero-1.jpg",
+    galeri: u.galeri && u.galeri.length > 0 ? u.galeri : [u.image || "/images/hero-1.jpg"],
+    menus: menusFormatted,
+    menu: menusFormatted,
+  };
+};
+
+/**
+ * Public List: only APPROVED items
+ */
+export const getUmkmList = async ({ limit, kategori, status, q }) => {
+  const where = {};
+
+  if (status && status !== "Semua") {
+    where.status = mapStatusToDb(status);
+  } else {
+    // If not specified by admin, default to APPROVED for public
+    where.status = "APPROVED";
+  }
+
+  if (kategori && kategori !== "semua" && kategori !== "Semua") {
+    where.OR = [
+      { kategori: { equals: kategori, mode: "insensitive" } },
+      { kategoriLabel: { contains: kategori, mode: "insensitive" } },
+    ];
+  }
+
+  if (q) {
+    where.OR = [
+      { nama: { contains: q, mode: "insensitive" } },
+      { pemilik: { contains: q, mode: "insensitive" } },
+      { dusun: { contains: q, mode: "insensitive" } },
+    ];
+  }
+
   const take = limit ? parseInt(limit, 10) : undefined;
 
-  return prisma.umkm.findMany({
+  const items = await prisma.umkm.findMany({
     where,
     take,
     include: { menus: { orderBy: { urutan: "asc" } } },
-    orderBy: { tanggal: "desc" },
+    orderBy: { createdAt: "desc" },
   });
+
+  return items.map(formatUmkmItem);
+};
+
+/**
+ * Admin List: includes ALL statuses (Menunggu, Aktif, Ditolak)
+ */
+export const getAdminUmkmList = async (query = {}) => {
+  const { status, kategori, search } = query;
+  const where = {};
+
+  if (status && status !== "Semua") {
+    where.status = mapStatusToDb(status);
+  }
+
+  if (kategori && kategori !== "Semua") {
+    where.OR = [
+      { kategori: { equals: kategori, mode: "insensitive" } },
+      { kategoriLabel: { contains: kategori, mode: "insensitive" } },
+    ];
+  }
+
+  if (search) {
+    where.OR = [
+      { nama: { contains: search, mode: "insensitive" } },
+      { pemilik: { contains: search, mode: "insensitive" } },
+      { dusun: { contains: search, mode: "insensitive" } },
+    ];
+  }
+
+  const items = await prisma.umkm.findMany({
+    where,
+    include: { menus: { orderBy: { urutan: "asc" } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return items.map(formatUmkmItem);
 };
 
 export const getUmkmPage = async () => {
@@ -135,14 +307,16 @@ export const getUmkmPage = async () => {
   };
 };
 
-export const getUmkmDetail = async (slug) => {
-  const item = await prisma.umkm.findUnique({
-    where: { slug },
+export const getUmkmDetail = async (identifier) => {
+  const item = await prisma.umkm.findFirst({
+    where: {
+      OR: [{ id: identifier }, { slug: identifier }],
+    },
     include: { menus: { orderBy: { urutan: "asc" } } },
   });
 
-  if (!item || item.status !== "APPROVED") {
-    throw new AppError("Profil usaha UMKM tidak ditemukan atau belum disetujui.", 404);
+  if (!item) {
+    throw new AppError("Profil usaha UMKM tidak ditemukan.", 404);
   }
 
   const related = await prisma.umkm.findMany({
@@ -155,7 +329,129 @@ export const getUmkmDetail = async (slug) => {
     orderBy: { tanggal: "desc" },
   });
 
-  return { item, related };
+  return { item: formatUmkmItem(item), related: related.map(formatUmkmItem) };
+};
+
+export const createUmkm = async (data, files = []) => {
+  let photoUrls = [];
+
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const url = await uploadToSupabase(file, "umkm");
+      photoUrls.push(url);
+    }
+  }
+
+  const baseSlug = (data.namaUsaha || data.nama || "umkm")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
+
+  const cleanWa = (data.whatsapp || data.telepon || "").replace(/\D/g, "");
+  const normalizedWa = cleanWa.startsWith("0") ? `62${cleanWa.slice(1)}` : cleanWa.startsWith("62") ? cleanWa : `62${cleanWa}`;
+
+  const statusDb = mapStatusToDb(data.status) || "APPROVED";
+
+  const created = await prisma.umkm.create({
+    data: {
+      slug,
+      nama: data.namaUsaha || data.nama,
+      kategori: data.kategori || "pangan",
+      kategoriLabel: data.kategori || "Kuliner & Kudapan",
+      badgeUtama: "USAHA WARGA",
+      jamOperasional: data.jamOperasional || "Setiap Hari",
+      statusBuka: data.jamOperasional ? `Buka (${data.jamOperasional})` : "Buka",
+      dusun: data.dusun || (data.alamat && data.alamat.includes("Dusun") ? data.alamat.split(",")[0] : "Desa Tambakrigadung"),
+      alamat: data.alamat,
+      pemilik: data.pemilik || data.namaPemilik,
+      whatsapp: normalizedWa,
+      hargaMin: data.hargaMin ? parseFloat(String(data.hargaMin).replace(/\D/g, "")) : null,
+      hargaMax: data.hargaMax ? parseFloat(String(data.hargaMax).replace(/\D/g, "")) : null,
+      hargaLabel: data.hargaMin && data.hargaMax ? `Rp ${data.hargaMin} – Rp ${data.hargaMax}` : "Harga Menyesuaikan",
+      image: photoUrls[0] || data.foto || "/images/hero-1.jpg",
+      galeri: photoUrls.length ? photoUrls : data.foto ? [data.foto] : ["/images/hero-1.jpg"],
+      ringkasan: (data.deskripsi || "").slice(0, 150) + ((data.deskripsi || "").length > 150 ? "..." : ""),
+      deskripsiLengkap: [data.deskripsi || ""],
+      mapsHref: data.mapsUrl || null,
+      status: statusDb,
+    },
+    include: { menus: true },
+  });
+
+  return formatUmkmItem(created);
+};
+
+export const updateUmkm = async (id, data, files = []) => {
+  const existing = await prisma.umkm.findUnique({ where: { id } });
+  if (!existing) {
+    throw new AppError("Data UMKM tidak ditemukan.", 404);
+  }
+
+  let photoUrls = existing.galeri || [];
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const url = await uploadToSupabase(file, "umkm");
+      photoUrls.push(url);
+    }
+  }
+
+  const updatePayload = {};
+  if (data.namaUsaha || data.nama) updatePayload.nama = data.namaUsaha || data.nama;
+  if (data.kategori) {
+    updatePayload.kategori = data.kategori;
+    updatePayload.kategoriLabel = data.kategori;
+  }
+  if (data.pemilik || data.namaPemilik) updatePayload.pemilik = data.pemilik || data.namaPemilik;
+  if (data.whatsapp || data.telepon) {
+    const cleanWa = (data.whatsapp || data.telepon).replace(/\D/g, "");
+    updatePayload.whatsapp = cleanWa.startsWith("0") ? `62${cleanWa.slice(1)}` : cleanWa.startsWith("62") ? cleanWa : `62${cleanWa}`;
+  }
+  if (data.jamOperasional !== undefined) updatePayload.jamOperasional = data.jamOperasional;
+  if (data.alamat) updatePayload.alamat = data.alamat;
+  if (data.dusun) updatePayload.dusun = data.dusun;
+  if (data.mapsUrl !== undefined) updatePayload.mapsHref = data.mapsUrl;
+  if (data.deskripsi) {
+    updatePayload.ringkasan = data.deskripsi.slice(0, 150) + (data.deskripsi.length > 150 ? "..." : "");
+    updatePayload.deskripsiLengkap = [data.deskripsi];
+  }
+  if (data.hargaMin !== undefined) {
+    updatePayload.hargaMin = data.hargaMin ? parseFloat(String(data.hargaMin).replace(/\D/g, "")) : null;
+  }
+  if (data.hargaMax !== undefined) {
+    updatePayload.hargaMax = data.hargaMax ? parseFloat(String(data.hargaMax).replace(/\D/g, "")) : null;
+  }
+  if (data.status) {
+    updatePayload.status = mapStatusToDb(data.status);
+  }
+  if (files && files.length > 0) {
+    updatePayload.image = photoUrls[0];
+    updatePayload.galeri = photoUrls;
+  }
+
+  const updated = await prisma.umkm.update({
+    where: { id },
+    data: updatePayload,
+    include: { menus: true },
+  });
+
+  return formatUmkmItem(updated);
+};
+
+export const deleteUmkm = async (id) => {
+  return prisma.umkm.delete({ where: { id } });
+};
+
+export const verifyUmkm = async (id, status) => {
+  const statusDb = mapStatusToDb(status);
+  const updated = await prisma.umkm.update({
+    where: { id },
+    data: {
+      status: statusDb,
+      verifiedAt: statusDb === "APPROVED" ? new Date() : null,
+    },
+  });
+  return formatUmkmItem(updated);
 };
 
 export const registerUmkmPublic = async (data, files) => {
@@ -163,7 +459,6 @@ export const registerUmkmPublic = async (data, files) => {
     throw new AppError("Harap unggah minimal 1 foto produk atau tempat usaha.", 400);
   }
 
-  // Upload all attached photos to Supabase Storage
   const photoUrls = [];
   for (const file of files) {
     const url = await uploadToSupabase(file, "umkm");
@@ -176,13 +471,6 @@ export const registerUmkmPublic = async (data, files) => {
     .replace(/^-|-$/g, "");
   const slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
 
-  const kategoriMap = {
-    pangan: "Kuliner & Kudapan",
-    olahan: "Olahan Tambak & Madu",
-    kerajinan: "Batik & Kerajinan",
-    jasa: "Fabrikasi & Jasa",
-  };
-
   const cleanWa = data.whatsapp.replace(/\D/g, "");
   const normalizedWa = cleanWa.startsWith("0") ? `62${cleanWa.slice(1)}` : cleanWa.startsWith("62") ? cleanWa : `62${cleanWa}`;
 
@@ -191,7 +479,7 @@ export const registerUmkmPublic = async (data, files) => {
       slug,
       nama: data.namaUsaha,
       kategori: data.kategori,
-      kategoriLabel: kategoriMap[data.kategori] || "UMKM Desa",
+      kategoriLabel: data.kategori,
       badgeUtama: "USAHA WARGA",
       jamOperasional: data.jamOperasional || "Setiap Hari",
       statusBuka: data.jamOperasional ? `Buka (${data.jamOperasional})` : "Buka",
@@ -207,7 +495,7 @@ export const registerUmkmPublic = async (data, files) => {
       ringkasan: data.deskripsi.slice(0, 150) + (data.deskripsi.length > 150 ? "..." : ""),
       deskripsiLengkap: [data.deskripsi],
       mapsHref: data.mapsUrl || null,
-      status: "PENDING", // Must be approved by Admin
+      status: "PENDING",
     },
   });
 
@@ -216,14 +504,4 @@ export const registerUmkmPublic = async (data, files) => {
     message: "Pendaftaran usaha berhasil dikirim dan sedang menunggu verifikasi Admin Desa (1–2 hari kerja).",
     id: created.id,
   };
-};
-
-export const verifyUmkm = async (id, status) => {
-  return prisma.umkm.update({
-    where: { id },
-    data: {
-      status,
-      verifiedAt: status === "APPROVED" ? new Date() : null,
-    },
-  });
 };

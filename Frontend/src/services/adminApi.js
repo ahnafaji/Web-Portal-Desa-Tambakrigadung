@@ -1,7 +1,20 @@
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const getToken = () =>
-  localStorage.getItem('token') || localStorage.getItem('admin_token') || '';
+const getToken = () => {
+  const directToken = localStorage.getItem('token') || localStorage.getItem('admin_token') || '';
+  if (directToken) return directToken;
+
+  try {
+    const authData = localStorage.getItem('tambakrigadung_admin_auth') || sessionStorage.getItem('tambakrigadung_admin_auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      return parsed?.token || '';
+    }
+  } catch {
+    return '';
+  }
+  return '';
+};
 
 async function request(endpoint, { method = 'GET', body, isFormData = false } = {}) {
   const headers = {};
@@ -12,6 +25,7 @@ async function request(endpoint, { method = 'GET', body, isFormData = false } = 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     method,
     headers,
+    credentials: 'include', // Kirim HttpOnly cookies ke backend
     body: body ? (isFormData ? body : JSON.stringify(body)) : undefined,
   });
 
@@ -19,7 +33,7 @@ async function request(endpoint, { method = 'GET', body, isFormData = false } = 
   if (!response.ok) {
     throw new Error(payload.message || `Gagal memproses permintaan (${response.status})`);
   }
-  return payload.data ?? payload;
+  return payload.data !== undefined ? payload.data : payload;
 }
 
 export const adminApi = {
@@ -52,7 +66,7 @@ export const adminApi = {
   deleteGaleri: (id) => request(`/galeri/${id}`, { method: 'DELETE' }),
 
   // APBD Desa
-  getApbd: (tahun) => request(`/apbd${tahun ? `?tahun=${tahun}` : ''}`),
+  getApbd: (tahun) => request(`/apbd?tahun=${tahun || 2026}&admin=true`),
   createApbdItem: (data) => request('/apbd', { method: 'POST', body: data }),
   updateApbdItem: (id, data) => request(`/apbd/${id}`, { method: 'PUT', body: data }),
   deleteApbdItem: (id) => request(`/apbd/${id}`, { method: 'DELETE' }),

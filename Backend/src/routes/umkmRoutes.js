@@ -12,7 +12,7 @@ router.get("/", umkmController.getUmkmList);
 router.get("/halaman", umkmController.getUmkmPage);
 router.get("/:slug", umkmController.getUmkmDetail);
 
-// Public Registration with strict rate limiter (max 5 uploads per hour per IP)
+// Public Registration
 router.post(
   "/daftar",
   publicUploadLimiter,
@@ -21,7 +21,23 @@ router.post(
   umkmController.submitDaftarUmkm
 );
 
-// Admin Verification & Management
+// Admin Management & Verification
+router.post(
+  "/",
+  authenticate,
+  authorize("SUPER_ADMIN", "OPERATOR_DESA"),
+  uploadImagesOnly.array("fotos", 5),
+  umkmController.createUmkm
+);
+router.put(
+  "/:id",
+  authenticate,
+  authorize("SUPER_ADMIN", "OPERATOR_DESA"),
+  uploadImagesOnly.array("fotos", 5),
+  umkmController.updateUmkm
+);
+router.patch("/:id/status", authenticate, authorize("SUPER_ADMIN", "OPERATOR_DESA"), umkmController.verifyUmkm);
 router.patch("/:id/verify", authenticate, authorize("SUPER_ADMIN", "OPERATOR_DESA"), umkmController.verifyUmkm);
+router.delete("/:id", authenticate, authorize("SUPER_ADMIN"), umkmController.deleteUmkm);
 
 export default router;

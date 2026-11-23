@@ -8,7 +8,7 @@ import { pengaduanSchema } from "../validations/schemas.js";
 
 const router = Router();
 
-// Public Submission with strict rate limiter and attachment upload
+// Public Submission
 router.post(
   "/",
   publicUploadLimiter,
@@ -19,7 +19,10 @@ router.post(
 
 router.get("/track/:tiket", pengaduanController.trackPengaduan);
 
-// Admin Disposisi & Status Update
+// Admin Management
+router.get("/", authenticate, authorize("SUPER_ADMIN", "OPERATOR_DESA"), pengaduanController.getPengaduanList);
 router.patch("/:id/status", authenticate, authorize("SUPER_ADMIN", "OPERATOR_DESA"), pengaduanController.updateStatusPengaduan);
+router.patch("/:id", authenticate, authorize("SUPER_ADMIN", "OPERATOR_DESA"), pengaduanController.updateStatusPengaduan);
+router.delete("/:id", authenticate, authorize("SUPER_ADMIN"), pengaduanController.deletePengaduan);
 
 export default router;

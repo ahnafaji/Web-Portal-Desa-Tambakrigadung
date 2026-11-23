@@ -22,7 +22,7 @@ export const getBeritaPage = async (req, res, next) => {
 
 export const getBeritaDetail = async (req, res, next) => {
   try {
-    const data = await beritaService.getBeritaDetail(req.params.slug);
+    const data = await beritaService.getBeritaDetail(req.params.slug || req.params.id);
     return sendResponse(res, 200, "Detail artikel berita berhasil dimuat.", data);
   } catch (err) {
     next(err);
@@ -31,7 +31,7 @@ export const getBeritaDetail = async (req, res, next) => {
 
 export const createBerita = async (req, res, next) => {
   try {
-    const data = await beritaService.createBerita(req.body);
+    const data = await beritaService.createBerita(req.body, req.file);
     await logAudit({
       req,
       action: "CREATE",
@@ -47,7 +47,7 @@ export const createBerita = async (req, res, next) => {
 
 export const updateBerita = async (req, res, next) => {
   try {
-    const data = await beritaService.updateBerita(req.params.id, req.body);
+    const data = await beritaService.updateBerita(req.params.id, req.body, req.file);
     await logAudit({
       req,
       action: "UPDATE",

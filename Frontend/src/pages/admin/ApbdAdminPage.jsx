@@ -14,79 +14,6 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../../services/adminapi';
 
-const INITIAL_APBD = [
-  {
-    id: 1,
-    tahun: '2026',
-    jenis: 'Belanja',
-    kode: '01',
-    uraian: 'Penyelenggaraan Pemerintahan Desa',
-    keterangan: 'Penghasilan tetap & tunjangan pamong, operasional kantor BPD/RT',
-    anggaran: 232050000,
-    realisasi: 230150000,
-  },
-  {
-    id: 2,
-    tahun: '2026',
-    jenis: 'Belanja',
-    kode: '02',
-    uraian: 'Pelaksanaan Pembangunan Desa',
-    keterangan: 'Drainase Krajan, jalan usaha tani Boyo, normalisasi irigasi sawah',
-    anggaran: 440000000,
-    realisasi: 435500000,
-  },
-  {
-    id: 3,
-    tahun: '2026',
-    jenis: 'Belanja',
-    kode: '03',
-    uraian: 'Pembinaan Kemasyarakatan',
-    keterangan: 'Penyelenggaraan posyandu lansia & balita, karang taruna, gotong royong',
-    anggaran: 88000000,
-    realisasi: 85350000,
-  },
-  {
-    id: 4,
-    tahun: '2026',
-    jenis: 'Belanja',
-    kode: '04',
-    uraian: 'Pemberdayaan Masyarakat',
-    keterangan: 'Pelatihan digital marketing UMKM, bantuan bibit ikan lele & nila',
-    anggaran: 125000000,
-    realisasi: 120200000,
-  },
-  {
-    id: 5,
-    tahun: '2026',
-    jenis: 'Belanja',
-    kode: '05',
-    uraian: 'Penanggulangan Bencana & Mendesak',
-    keterangan: 'BLT Dana Desa KPM kemiskinan ekstrem & kesiapsiagaan banjir luapan',
-    anggaran: 70000000,
-    realisasi: 69000000,
-  },
-  {
-    id: 6,
-    tahun: '2026',
-    jenis: 'Pendapatan',
-    kode: '01',
-    uraian: 'Dana Desa (DD) APBN',
-    keterangan: 'Transfer Pemerintah Pusat untuk pembangunan dan pemberdayaan',
-    anggaran: 685000000,
-    realisasi: 685000000,
-  },
-  {
-    id: 7,
-    tahun: '2026',
-    jenis: 'Pendapatan',
-    kode: '02',
-    uraian: 'Alokasi Dana Desa (ADD) & Bagi Hasil Pajak',
-    keterangan: 'Transfer Pemerintah Kabupaten Lamongan',
-    anggaran: 284000000,
-    realisasi: 284000000,
-  },
-];
-
 const formatRupiah = (num) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -97,7 +24,8 @@ const formatRupiah = (num) =>
 export default function ApbdAdminPage() {
   const [tahunList, setTahunList] = useState(['2026', '2025']);
   const [tahun, setTahun] = useState('2026');
-  const [items, setItems] = useState(INITIAL_APBD);
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Belanja');
   const [search, setSearch] = useState('');
   const [showOnHome, setShowOnHome] = useState(true);
@@ -119,12 +47,19 @@ export default function ApbdAdminPage() {
   });
 
   useEffect(() => {
+    setLoading(true);
     adminApi
       .getApbd(tahun)
       .then((res) => {
-        if (Array.isArray(res) && res.length) setItems(res);
+        if (Array.isArray(res)) setItems(res);
+        else if (res && Array.isArray(res.items)) setItems(res.items);
+        else setItems([]);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Gagal memuat pos APBD:', err);
+        setItems([]);
+      })
+      .finally(() => setLoading(false));
   }, [tahun]);
 
   const yearItems = useMemo(() => items.filter((i) => i.tahun === tahun), [items, tahun]);
@@ -195,22 +130,32 @@ export default function ApbdAdminPage() {
       realisasi: Number(formModal.realisasi) || 0,
     };
 
-    if (editingItem) {
-      await adminApi.updateApbdItem(editingItem.id, payload).catch(() => {});
-      setItems((prev) =>
-        prev.map((i) => (i.id === editingItem.id ? { ...i, ...payload } : i))
-      );
-    } else {
-      const created = await adminApi.createApbdItem(payload).catch(() => null);
-      setItems((prev) => [...prev, created || { id: Date.now(), ...payload }]);
+    try {
+      if (editingItem) {
+        const updated = await adminApi.updateApbdItem(editingItem.id, payload);
+        setItems((prev) =>
+          prev.map((i) => (i.id === editingItem.id ? { ...i, ...updated, ...payload } : i))
+        );
+      } else {
+        const created = await adminApi.createApbdItem(payload);
+        if (created) {
+          setItems((prev) => [...prev, created]);
+        }
+      }
+      setModalOpen(false);
+    } catch (err) {
+      alert(err.message || 'Gagal menyimpan pos rincian APBD.');
     }
-    setModalOpen(false);
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('Hapus pos rincian anggaran ini?')) return;
-    await adminApi.deleteApbdItem(id).catch(() => {});
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    try {
+      await adminApi.deleteApbdItem(id);
+      setItems((prev) => prev.filter((i) => i.id !== id));
+    } catch (err) {
+      alert(err.message || 'Gagal menghapus pos rincian APBD.');
+    }
   };
 
   const handlePdfChange = async (e) => {
@@ -381,7 +326,20 @@ export default function ApbdAdminPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleRows.map((row) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-8 text-muted">
+                    Memuat data rincian pos APBD...
+                  </td>
+                </tr>
+              ) : visibleRows.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-8 text-muted">
+                    Belum ada data rincian pos anggaran untuk kategori {activeTab}.
+                  </td>
+                </tr>
+              ) : (
+                visibleRows.map((row) => (
                 <tr key={row.id}>
                   <td className="text-muted">{row.kode}</td>
                   <td>
@@ -413,7 +371,7 @@ export default function ApbdAdminPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )))}
             </tbody>
             <tfoot>
               <tr>

@@ -36,6 +36,13 @@ export default function AdminLoginPage() {
     try {
       setLoading(true);
       const res = await api.loginAdmin({ email, password });
+      
+      // Simpan token ke localStorage langsung agar adminApi.js selalu dapat membaca token
+      if (res.token) {
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("admin_token", res.token);
+      }
+
       login({ ...res.user, token: res.token }, remember);
       navigate("/admin/dashboard");
     } catch (err) {

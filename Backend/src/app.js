@@ -9,6 +9,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 
 // Routes
 import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import beritaRoutes from "./routes/beritaRoutes.js";
 import umkmRoutes from "./routes/umkmRoutes.js";
 import pengaduanRoutes from "./routes/pengaduanRoutes.js";
@@ -70,6 +71,7 @@ app.get("/health", (req, res) => {
 // 8. API v1 Modular Routes
 const v1Router = express.Router();
 v1Router.use("/auth", authRoutes);
+v1Router.use("/admin", adminRoutes);
 v1Router.use("/berita", beritaRoutes);
 v1Router.use("/umkm", umkmRoutes);
 v1Router.use("/pengaduan", pengaduanRoutes);

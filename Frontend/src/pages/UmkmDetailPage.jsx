@@ -41,11 +41,22 @@ export default function UmkmDetailPage() {
       <div className="container">
         <AsyncBlock state={state} minHeight={600}>
           {({ item, related }) => {
-            const photos = item.galeri?.length ? item.galeri : [item.image];
+            if (!item) {
+              return (
+                <div className="empty-state py-12 text-center">
+                  <h3>Data UMKM tidak ditemukan.</h3>
+                  <Link to="/umkm" className="btn-pill btn-pill--primary mt-4">
+                    Kembali ke Katalog UMKM
+                  </Link>
+                </div>
+              );
+            }
+
+            const photos = item.galeri?.length ? item.galeri : [item.image || "/images/hero-1.jpg"];
             const currentPhoto = photos[activePhotoIdx] || photos[0];
-            const waGeneral = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(
-              `Halo ${item.pemilik}, saya melihat "${item.nama}" di Website Desa Tambakrigadung dan ingin bertanya/memesan.`
-            )}`;
+            const waGeneral = item.whatsapp ? `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(
+              `Halo ${item.pemilik || 'Admin'}, saya melihat "${item.nama}" di Website Desa Tambakrigadung dan ingin bertanya/memesan.`
+            )}` : '#';
 
             return (
               <>
@@ -188,12 +199,15 @@ export default function UmkmDetailPage() {
                   </div>
 
                   <div className="umkm-story-grid">
-                    {item.deskripsiLengkap.map((p, idx) => (
+                    {(Array.isArray(item.deskripsiLengkap) && item.deskripsiLengkap.length > 0
+                      ? item.deskripsiLengkap
+                      : [item.deskripsi || item.ringkasan || "Informasi profil usaha desa."]
+                    ).map((p, idx) => (
                       <p key={idx}>{p}</p>
                     ))}
                   </div>
 
-                  {item.menu?.length > 0 && (
+                  {((item.menu && item.menu.length > 0) || (item.menus && item.menus.length > 0)) && (
                     <div className="umkm-menu-wrap">
                       <div className="umkm-menu-wrap__head">
                         <h3>Daftar Menu &amp; Harga Resmi</h3>
@@ -201,27 +215,29 @@ export default function UmkmDetailPage() {
                       </div>
 
                       <div className="umkm-menu-grid">
-                        {item.menu.map((m) => {
-                          const waMenu = `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(
+                        {(item.menu || item.menus || []).map((m) => {
+                          const waMenu = item.whatsapp ? `https://wa.me/${item.whatsapp}?text=${encodeURIComponent(
                             `Halo ${item.pemilik}, saya mau pesan "${m.nama}" (${m.harga}) dari ${item.nama}.`
-                          )}`;
+                          )}` : '#';
                           return (
-                            <article className="menu-tile" key={m.id}>
-                              <span className="menu-tile__badge">{m.badge}</span>
+                            <article className="menu-tile" key={m.id || m.nama}>
+                              {m.badge && <span className="menu-tile__badge">{m.badge}</span>}
                               <h4>{m.nama}</h4>
-                              <p>{m.deskripsi}</p>
+                              {m.deskripsi && <p>{m.deskripsi}</p>}
                               <div className="menu-tile__foot">
                                 <strong>{m.harga}</strong>
-                                <a
-                                  href={waMenu}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="menu-tile__order"
-                                  aria-label={`Pesan ${m.nama} via WhatsApp`}
-                                  title={`Pesan ${m.nama}`}
-                                >
-                                  <ShoppingBag size={14} />
-                                </a>
+                                {item.whatsapp && (
+                                  <a
+                                    href={waMenu}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="menu-tile__order"
+                                    aria-label={`Pesan ${m.nama} via WhatsApp`}
+                                    title={`Pesan ${m.nama}`}
+                                  >
+                                    <ShoppingBag size={14} />
+                                  </a>
+                                )}
                               </div>
                             </article>
                           );
@@ -235,19 +251,19 @@ export default function UmkmDetailPage() {
                 <section className="umkm-section-box" aria-labelledby="lokasi-heading">
                   <div className="section-head__text umkm-section-box__head">
                     <h2 id="lokasi-heading">Peta Lokasi &amp; Aksesibilitas</h2>
-                    <p>Panduan menuju gerai {item.nama} di {item.dusun}</p>
+                    <p>Panduan menuju gerai {item.nama} di {item.dusun || 'Desa Tambakrigadung'}</p>
                   </div>
 
                   <div className="umkm-map-grid">
                     <div className="umkm-map-frame">
                       <iframe
                         title={`Peta lokasi ${item.nama}`}
-                        src={item.mapEmbedUrl}
+                        src={item.mapEmbedUrl || "https://www.google.com/maps?q=Tambakrigadung,+Tikung,+Lamongan+Regency,+East+Java&output=embed"}
                         loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"
                       />
                       <span className="umkm-map-frame__pill">
-                        <MapPin size={13} aria-hidden="true" /> Lokasi: {item.patokanLokasi}
+                        <MapPin size={13} aria-hidden="true" /> Lokasi: {item.patokanLokasi || item.alamat || 'Desa Tambakrigadung'}
                       </span>
                     </div>
 
@@ -255,25 +271,29 @@ export default function UmkmDetailPage() {
                       <span className="umkm-direction-card__eyebrow">
                         <Navigation size={13} aria-hidden="true" /> PETUNJUK ARAH
                       </span>
-                      <p>{item.petunjukArah.deskripsi}</p>
+                      <p>{item.petunjukArah?.deskripsi || item.patokanLokasi || 'Akses jalan utama desa mudah dijangkau.'}</p>
 
-                      <ul className="umkm-direction-card__list">
-                        {item.petunjukArah.fasilitas.map((f) => (
-                          <li key={f}>
-                            <CheckCircle2 size={15} aria-hidden="true" />
-                            <span>{f}</span>
-                          </li>
-                        ))}
-                      </ul>
+                      {Array.isArray(item.petunjukArah?.fasilitas) && item.petunjukArah.fasilitas.length > 0 && (
+                        <ul className="umkm-direction-card__list">
+                          {item.petunjukArah.fasilitas.map((f) => (
+                            <li key={f}>
+                              <CheckCircle2 size={15} aria-hidden="true" />
+                              <span>{f}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
-                      <a
-                        href={item.mapsHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-pill btn-pill--soft umkm-direction-card__btn"
-                      >
-                        Buka di Google Maps
-                      </a>
+                      {item.mapsHref && (
+                        <a
+                          href={item.mapsHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-pill btn-pill--soft umkm-direction-card__btn"
+                        >
+                          Buka di Google Maps
+                        </a>
+                      )}
                     </div>
                   </div>
                 </section>
