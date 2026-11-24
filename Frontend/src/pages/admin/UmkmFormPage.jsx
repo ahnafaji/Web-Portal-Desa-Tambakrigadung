@@ -43,6 +43,16 @@ const stripCountryCode = (wa = '') => {
   return digits;
 };
 
+const resolveImageSrc = (src) => {
+  if (!src) return '';
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('blob:')) {
+    return src;
+  }
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
+  const cleanPath = src.startsWith('/') ? src : `/${src}`;
+  return `${base}${cleanPath}`;
+};
+
 export default function UmkmFormPage() {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -139,7 +149,7 @@ export default function UmkmFormPage() {
 
   const handleFileAdd = (e) => {
     const files = Array.from(e.target.files || []);
-    const remaining = 4 - photos.length;
+    const remaining = Math.max(0, 4 - existingPhotos.length - photos.length);
     const valid = files.slice(0, remaining).map((file) => ({
       file,
       name: file.name,
@@ -148,6 +158,10 @@ export default function UmkmFormPage() {
     }));
     setPhotos((prev) => [...prev, ...valid]);
     e.target.value = '';
+  };
+
+  const removeExistingPhoto = (index) => {
+    setExistingPhotos((prev) => prev.filter((_, idx) => idx !== index));
   };
 
   const removePhoto = (index) => {
@@ -170,6 +184,9 @@ export default function UmkmFormPage() {
           fd.append(k, v);
         }
       });
+      if (isEdit) {
+        fd.append('existingPhotos', JSON.stringify(existingPhotos));
+      }
       photos.forEach((p) => p.file && fd.append('fotos', p.file));
 
       if (isEdit) {
@@ -445,12 +462,21 @@ export default function UmkmFormPage() {
                   </span>
                   {existingPhotos.map((url, idx) => (
                     <div key={`${url}-${idx}`} className="admin-uploaded-item">
-                      <img src={url} alt={`Foto UMKM ${idx + 1}`} />
+                      <img src={resolveImageSrc(url)} alt={`Foto UMKM ${idx + 1}`} />
                       <div className="admin-uploaded-meta">
                         <strong>Foto Tersimpan #{idx + 1}</strong>
                         <span>Aktif di katalog publik</span>
                       </div>
                       {idx === 0 && <span className="admin-pill is-success-soft">Cover</span>}
+                      <button
+                        type="button"
+                        onClick={() => removeExistingPhoto(idx)}
+                        className="admin-icon-btn"
+                        aria-label={`Hapus foto tersimpan #${idx + 1}`}
+                        title="Hapus foto"
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                   ))}
                 </div>

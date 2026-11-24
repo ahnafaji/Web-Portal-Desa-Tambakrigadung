@@ -11,16 +11,19 @@ import {
   CheckCircle2,
   Building2,
 } from 'lucide-react';
+import { api } from '../../services/api.js';
+import useFetch from '../../hooks/useFetch.js';
 import '../../styles/strukturpemerintah.css';
 
 const FOTO_KADES_DEFAULT = `${import.meta.env.BASE_URL}images/kades.jpeg`;
 const BAGAN_SOTK_DEFAULT = '/images/bagan-struktur-pemerintah-desa.png';
 
-const DATA_APARATUR = [
+const DATA_APARATUR_FALLBACK = [
   {
     id: 'kades',
     nama: 'Moch. Takim',
     jabatan: 'Kepala Desa',
+    posisiSotk: 'Pimpinan',
     isKades: true,
     foto: FOTO_KADES_DEFAULT,
     periode: '2019 – Sekarang',
@@ -36,6 +39,7 @@ const DATA_APARATUR = [
     id: 'sekdes',
     nama: 'Sekretaris Desa',
     jabatan: 'Sekretaris Desa',
+    posisiSotk: 'Sekretariat',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -50,6 +54,7 @@ const DATA_APARATUR = [
     id: 'kaur-tu',
     nama: 'Kaur Tata Usaha & Umum',
     jabatan: 'Kaur Tata Usaha dan Umum',
+    posisiSotk: 'Kaur',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -64,6 +69,7 @@ const DATA_APARATUR = [
     id: 'kaur-keuangan',
     nama: 'Kaur Keuangan',
     jabatan: 'Kaur Keuangan',
+    posisiSotk: 'Kaur',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -78,6 +84,7 @@ const DATA_APARATUR = [
     id: 'kaur-perencanaan',
     nama: 'Kaur Perencanaan',
     jabatan: 'Kaur Perencanaan',
+    posisiSotk: 'Kaur',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -92,6 +99,7 @@ const DATA_APARATUR = [
     id: 'kasi-pemerintahan',
     nama: 'Kasi Pemerintahan',
     jabatan: 'Kasi Pemerintahan',
+    posisiSotk: 'Kasi',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -106,6 +114,7 @@ const DATA_APARATUR = [
     id: 'kasi-kesejahteraan',
     nama: 'Kasi Kesejahteraan',
     jabatan: 'Kasi Kesejahteraan',
+    posisiSotk: 'Kasi',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -120,6 +129,7 @@ const DATA_APARATUR = [
     id: 'kasi-pelayanan',
     nama: 'Kasi Pelayanan',
     jabatan: 'Kasi Pelayanan',
+    posisiSotk: 'Kasi',
     isKades: false,
     foto: null,
     periode: 'Aktif Menjabat',
@@ -130,6 +140,11 @@ const DATA_APARATUR = [
       'Meningkatkan upaya partisipasi masyarakat, pelestarian nilai sosial budaya, dan keagamaan.',
     ],
   },
+];
+
+const DEFAULT_TUPOKSI = [
+  'Melaksanakan tugas pelayanan publik dan administrasi pemerintahan desa sesuai bidang jabatan.',
+  'Membantu Kepala Desa dalam mewujudkan tata kelola pemerintahan Desa Tambakrigadung yang transparan.',
 ];
 
 function AnonymousAvatar({ label }) {
@@ -154,45 +169,37 @@ function AnonymousAvatar({ label }) {
   );
 }
 
-function SotkFallbackDiagram() {
+function SotkFallbackDiagram({ aparaturList }) {
+  const kades = aparaturList.find((p) => p.posisiSotk === 'Pimpinan') || aparaturList[0];
+  const sekdes = aparaturList.find((p) => p.posisiSotk === 'Sekretariat');
+  const branches = aparaturList.filter(
+    (p) => p.id !== kades?.id && p.id !== sekdes?.id
+  );
+
   return (
     <div className="sp-sotk-fallback">
       <div className="sp-node is-head">
-        <span>KEPALA DESA</span>
-        <strong>Moch. Takim</strong>
+        <span>{(kades?.jabatan || 'KEPALA DESA').toUpperCase()}</span>
+        <strong>{kades?.nama || 'Moch. Takim'}</strong>
       </div>
       <div className="sp-line-v" />
       <div className="sp-node is-sekdes">
-        <span>SEKRETARIS DESA</span>
-        <strong>Sekretariat Desa</strong>
+        <span>{(sekdes?.jabatan || 'SEKRETARIS DESA').toUpperCase()}</span>
+        <strong>{sekdes?.nama || 'Sekretariat Desa'}</strong>
       </div>
-      <div className="sp-line-v" />
-      <div className="sp-sotk-branches">
-        <div className="sp-node">
-          <span>KAUR</span>
-          <strong>TU &amp; Umum</strong>
-        </div>
-        <div className="sp-node">
-          <span>KAUR</span>
-          <strong>Keuangan</strong>
-        </div>
-        <div className="sp-node">
-          <span>KAUR</span>
-          <strong>Perencanaan</strong>
-        </div>
-        <div className="sp-node">
-          <span>KASI</span>
-          <strong>Pemerintahan</strong>
-        </div>
-        <div className="sp-node">
-          <span>KASI</span>
-          <strong>Kesejahteraan</strong>
-        </div>
-        <div className="sp-node">
-          <span>KASI</span>
-          <strong>Pelayanan</strong>
-        </div>
-      </div>
+      {branches.length > 0 && (
+        <>
+          <div className="sp-line-v" />
+          <div className="sp-sotk-branches">
+            {branches.map((item) => (
+              <div className="sp-node" key={item.id}>
+                <span>{(item.posisiSotk || 'PERANGKAT').toUpperCase()}</span>
+                <strong>{item.jabatan}</strong>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -201,17 +208,28 @@ export default function StrukturPemerintahanSection({
   fotoKades = FOTO_KADES_DEFAULT,
   baganImage = BAGAN_SOTK_DEFAULT,
 }) {
+  const { data: remotePerangkat } = useFetch(api.getPerangkat);
   const sliderRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(35);
   const [showAllGrid, setShowAllGrid] = useState(false);
   const [selectedOfficial, setSelectedOfficial] = useState(null);
   const [sotkModalOpen, setSotkModalOpen] = useState(false);
   const [sotkImgError, setSotkImgError] = useState(false);
-  const [kadesImgError, setKadesImgError] = useState(false);
+  const [imgErrors, setImgErrors] = useState({});
 
-  const aparaturList = DATA_APARATUR.map((item) =>
-    item.isKades ? { ...item, foto: fotoKades } : item
-  );
+  const aparaturList =
+    Array.isArray(remotePerangkat) && remotePerangkat.length > 0
+      ? remotePerangkat.map((p) => ({
+        ...p,
+        isKades: p.posisiSotk === 'Pimpinan',
+        periode: p.nipd ? `NIPD: ${p.nipd}` : 'Aktif Menjabat',
+        status: p.status || 'Aktif Menjabat',
+        pendidikan: p.posisiSotk || 'Perangkat Desa',
+        tupoksi: DEFAULT_TUPOKSI,
+      }))
+      : DATA_APARATUR_FALLBACK.map((item) =>
+        item.isKades ? { ...item, foto: fotoKades } : item
+      );
 
   const handleScroll = () => {
     const el = sliderRef.current;
@@ -229,6 +247,19 @@ export default function StrukturPemerintahanSection({
     const el = sliderRef.current;
     if (!el) return;
     el.scrollBy({ left: direction * 290, behavior: 'smooth' });
+  };
+
+  const renderAvatar = (person) => {
+    if (person.foto && !imgErrors[person.id]) {
+      return (
+        <img
+          src={person.foto}
+          alt={person.nama}
+          onError={() => setImgErrors((prev) => ({ ...prev, [person.id]: true }))}
+        />
+      );
+    }
+    return <AnonymousAvatar label={person.jabatan} />;
   };
 
   return (
@@ -262,7 +293,7 @@ export default function StrukturPemerintahanSection({
                 onError={() => setSotkImgError(true)}
               />
             ) : (
-              <SotkFallbackDiagram />
+              <SotkFallbackDiagram aparaturList={aparaturList} />
             )}
           </div>
         </div>
@@ -323,20 +354,10 @@ export default function StrukturPemerintahanSection({
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && setSelectedOfficial(person)}
               >
-                <div className="sp-person-photo">
-                  {person.isKades && person.foto && !kadesImgError ? (
-                    <img
-                      src={person.foto}
-                      alt={person.nama}
-                      onError={() => setKadesImgError(true)}
-                    />
-                  ) : (
-                    <AnonymousAvatar label={person.jabatan} />
-                  )}
-                </div>
+                <div className="sp-person-photo">{renderAvatar(person)}</div>
 
                 <div className="sp-person-body">
-                  <h3>{person.nama.toUpperCase()}</h3>
+                  <h3>{String(person.nama || '').toUpperCase()}</h3>
                   <p>{person.jabatan}</p>
                   <span className="sp-card-detail-hint">Klik untuk detail</span>
                 </div>
@@ -365,13 +386,7 @@ export default function StrukturPemerintahanSection({
             </button>
 
             <div className="sp-modal-top">
-              <div className="sp-modal-avatar">
-                {selectedOfficial.isKades && selectedOfficial.foto && !kadesImgError ? (
-                  <img src={selectedOfficial.foto} alt={selectedOfficial.nama} />
-                ) : (
-                  <AnonymousAvatar label={selectedOfficial.jabatan} />
-                )}
-              </div>
+              <div className="sp-modal-avatar">{renderAvatar(selectedOfficial)}</div>
 
               <div className="sp-modal-identity">
                 <span className="sp-modal-role-pill">{selectedOfficial.jabatan}</span>
@@ -382,7 +397,7 @@ export default function StrukturPemerintahanSection({
                   <div>
                     <Calendar size={14} />
                     <span>
-                      Masa Bakti: <strong>{selectedOfficial.periode}</strong>
+                      Identitas: <strong>{selectedOfficial.periode}</strong>
                     </span>
                   </div>
                   <div>
@@ -394,7 +409,7 @@ export default function StrukturPemerintahanSection({
                   <div>
                     <Award size={14} />
                     <span>
-                      Pendidikan: <strong>{selectedOfficial.pendidikan}</strong>
+                      Bagian: <strong>{selectedOfficial.pendidikan}</strong>
                     </span>
                   </div>
                 </div>
@@ -404,7 +419,7 @@ export default function StrukturPemerintahanSection({
             <div className="sp-modal-tupoksi">
               <h4>Tugas Pokok &amp; Fungsi</h4>
               <ul>
-                {selectedOfficial.tupoksi.map((tugas, idx) => (
+                {(selectedOfficial.tupoksi || DEFAULT_TUPOKSI).map((tugas, idx) => (
                   <li key={idx}>
                     <CheckCircle2 size={16} />
                     <span>{tugas}</span>

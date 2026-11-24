@@ -89,6 +89,31 @@ export const adminApi = {
   updateBerita: (id, formData) =>
     request(`/berita/${id}`, { method: 'PUT', body: formData, isFormData: true }),
   deleteBerita: (id) => request(`/berita/${id}`, { method: 'DELETE' }),
+
+  // Data Kependudukan / Statistik Desa
+  getStatistik: () => request('/statistik'),
+  updateStatistik: (data) => request('/statistik', { method: 'PUT', body: data }),
+
+  // Potensi Page
+  // Potensi Desa
+  getPotensiPage: () => request('/potensi/halaman'),
+  createPotensi: (formData) =>
+    request('/potensi', { method: 'POST', body: formData, isFormData: true }),
+  updatePotensi: (id, formData) =>
+    request(`/potensi/${id}`, { method: 'PUT', body: formData, isFormData: true }),
+  deletePotensi: (id) => request(`/potensi/${id}`, { method: 'DELETE' }),
+  updatePotensiAngka: (items) =>
+    request('/potensi/angka', { method: 'PUT', body: { items } }),
+
+  // Profil & Perangkat Desa
+  getProfil: () => request('/profil'),
+  updateProfil: (data) => request('/profil', { method: 'PUT', body: data }),
+  getPerangkat: () => request('/perangkat'),
+  createPerangkat: (data) =>
+    request('/perangkat', { method: 'POST', body: data, isFormData: data instanceof FormData }),
+  updatePerangkat: (id, data) =>
+    request(`/perangkat/${id}`, { method: 'PUT', body: data, isFormData: data instanceof FormData }),
+  deletePerangkat: (id) => request(`/perangkat/${id}`, { method: 'DELETE' }),
 };
 
 export function exportToCsv(filename, rows) {

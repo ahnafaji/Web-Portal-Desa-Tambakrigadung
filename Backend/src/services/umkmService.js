@@ -450,13 +450,29 @@ export const updateUmkm = async (id, data, files = []) => {
   }
 
   let photoUrls = existing.galeri || [];
+  let photosChanged = false;
+
+  if (data.existingPhotos !== undefined) {
+    photosChanged = true;
+    try {
+      const parsed =
+        typeof data.existingPhotos === "string"
+          ? JSON.parse(data.existingPhotos)
+          : data.existingPhotos;
+      photoUrls = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      photoUrls = [];
+    }
+  }
+
   if (files && files.length > 0) {
+    photosChanged = true;
     const newUrls = [];
     for (const file of files) {
       const url = await uploadToSupabase(file, "umkm");
       newUrls.push(url);
     }
-    photoUrls = [...newUrls, ...photoUrls];
+    photoUrls = [...photoUrls, ...newUrls];
   }
 
   const updatePayload = {};
@@ -525,8 +541,8 @@ export const updateUmkm = async (id, data, files = []) => {
   if (data.status) {
     updatePayload.status = mapStatusToDb(data.status);
   }
-  if (files && files.length > 0) {
-    updatePayload.image = photoUrls[0];
+  if (photosChanged) {
+    updatePayload.image = photoUrls[0] || "/images/hero-1.jpg";
     updatePayload.galeri = photoUrls;
   }
 

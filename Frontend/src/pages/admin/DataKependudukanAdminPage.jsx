@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Users,
   User,
@@ -10,11 +10,12 @@ import {
   RotateCcw,
   Check,
   Info,
+  AlertCircle,
 } from "lucide-react";
 import { formatAngka } from "../../utils/format.js";
+import { adminApi } from "../../services/adminApi";
+import { useAdminToast } from "../../context/AdminToastContext";
 import "../../styles/admin.css";
-
-const STORAGE_KEY = "tambakrigadung_admin_statistik_v1";
 
 const DEFAULT_STATS = {
   totalJiwa: 2039,
@@ -25,6 +26,17 @@ const DEFAULT_STATS = {
   potensiDesa: 11,
   fasilitasDesa: 10,
   aparaturDesa: 44,
+};
+
+const DB_KEY_TO_FIELD = {
+  jiwa: "totalJiwa",
+  kk: "kepalaKeluarga",
+  laki: "lakiLaki",
+  perempuan: "perempuan",
+  umkm: "produkUmkm",
+  potensi: "potensiDesa",
+  fasilitas: "fasilitasDesa",
+  aparatur: "aparaturDesa",
 };
 
 const PREVIEW_CONFIG = [
@@ -38,17 +50,60 @@ const PREVIEW_CONFIG = [
   { key: "aparaturDesa", label: "Aparatur Desa", color: "#1e293b", bg: "#e2e8f0", Icon: UsersRound },
 ];
 
+const mapFromApi = (list) => {
+  const next = { ...DEFAULT_STATS };
+  if (Array.isArray(list)) {
+    list.forEach((item) => {
+      const field = DB_KEY_TO_FIELD[item.key];
+      if (field) next[field] = Number(item.value) || 0;
+    });
+  }
+  return next;
+};
+
+const mapToApi = (form) => ({
+  jiwa: form.totalJiwa,
+  kk: form.kepalaKeluarga,
+  laki: form.lakiLaki,
+  perempuan: form.perempuan,
+  umkm: form.produkUmkm,
+  potensi: form.potensiDesa,
+  fasilitas: form.fasilitasDesa,
+  aparatur: form.aparaturDesa,
+});
+
 export default function DataKependudukanAdminPage() {
-  const [stats, setStats] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? { ...DEFAULT_STATS, ...JSON.parse(saved) } : DEFAULT_STATS;
-    } catch {
-      return DEFAULT_STATS;
-    }
-  });
-  const [savedSnapshot, setSavedSnapshot] = useState(stats);
-  const [statusMsg, setStatusMsg] = useState("");
+  const toast = useAdminToast();
+  const [stats, setStats] = useState(DEFAULT_STATS);
+  const [savedSnapshot, setSavedSnapshot] = useState(DEFAULT_STATS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [pageError, setPageError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setPageError("");
+
+    adminApi
+      .getStatistik()
+      .then((res) => {
+        if (!active) return;
+        const mapped = mapFromApi(res);
+        setStats(mapped);
+        setSavedSnapshot(mapped);
+      })
+      .catch((err) => {
+        if (active) setPageError(err.message || "Gagal memuat data kependudukan dari server.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleChange = (key, raw) => {
     const clean = Number(String(raw).replace(/\D/g, "")) || 0;
@@ -57,16 +112,28 @@ export default function DataKependudukanAdminPage() {
 
   const handleReset = () => {
     setStats(savedSnapshot);
-    setStatusMsg("Nilai dikembalikan ke data tersimpan terakhir.");
-    setTimeout(() => setStatusMsg(""), 3000);
+    toast.info("Nilai dikembalikan ke data tersimpan terakhir.", "Form Direset");
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
-    setSavedSnapshot(stats);
-    setStatusMsg("Data kependudukan & statistik desa berhasil disimpan.");
-    setTimeout(() => setStatusMsg(""), 3500);
+    setSaving(true);
+    setPageError("");
+    try {
+      const updated = await adminApi.updateStatistik(mapToApi(stats));
+      const mapped = mapFromApi(updated);
+      setStats(mapped);
+      setSavedSnapshot(mapped);
+      toast.success(
+        "Data kependudukan & statistik desa berhasil diperbarui di Beranda publik.",
+        "Statistik Disimpan"
+      );
+    } catch (err) {
+      setPageError(err.message || "Gagal menyimpan perubahan statistik.");
+      toast.error(err.message || "Gagal menyimpan perubahan statistik.", "Gagal Menyimpan");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -80,20 +147,44 @@ export default function DataKependudukanAdminPage() {
         </div>
 
         <div className="adm-mod-actions">
-          <button type="button" onClick={handleReset} className="adm-btn adm-btn--outline">
+          <button
+            type="button"
+            disabled={loading || saving}
+            onClick={handleReset}
+            className="adm-btn adm-btn--outline"
+          >
             <RotateCcw size={15} />
             <span>Reset</span>
           </button>
-          <button type="submit" form="form-kependudukan" className="adm-btn adm-btn--primary">
+          <button
+            type="submit"
+            form="form-kependudukan"
+            disabled={loading || saving}
+            className="adm-btn adm-btn--primary"
+          >
             <Check size={16} />
-            <span>Simpan Perubahan</span>
+            <span>{saving ? "Menyimpan..." : "Simpan Perubahan"}</span>
           </button>
         </div>
       </div>
 
-      {statusMsg && (
-        <div className="adm-badge adm-badge--green" role="status" style={{ padding: "10px 14px", borderRadius: 10 }}>
-          <Check size={15} /> {statusMsg}
+      {pageError && (
+        <div
+          role="alert"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "12px 16px",
+            borderRadius: "10px",
+            backgroundColor: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#b91c1c",
+            fontSize: "0.9rem",
+          }}
+        >
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          <span>{pageError}</span>
         </div>
       )}
 
@@ -113,7 +204,7 @@ export default function DataKependudukanAdminPage() {
               </span>
               <div>
                 <p className="adm-stat-tile__val" style={{ color }}>
-                  {formatAngka(stats[key])}
+                  {loading ? "..." : formatAngka(stats[key])}
                 </p>
                 <p className="adm-stat-tile__lbl">{label}</p>
               </div>
@@ -135,6 +226,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-total-jiwa"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.totalJiwa}
                 onChange={(e) => handleChange("totalJiwa", e.target.value)}
               />
@@ -149,6 +241,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-kk"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.kepalaKeluarga}
                 onChange={(e) => handleChange("kepalaKeluarga", e.target.value)}
               />
@@ -163,6 +256,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-laki"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.lakiLaki}
                 onChange={(e) => handleChange("lakiLaki", e.target.value)}
               />
@@ -177,6 +271,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-perempuan"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.perempuan}
                 onChange={(e) => handleChange("perempuan", e.target.value)}
               />
@@ -194,6 +289,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-umkm"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.produkUmkm}
                 onChange={(e) => handleChange("produkUmkm", e.target.value)}
               />
@@ -208,6 +304,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-potensi"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.potensiDesa}
                 onChange={(e) => handleChange("potensiDesa", e.target.value)}
               />
@@ -222,6 +319,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-fasilitas"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.fasilitasDesa}
                 onChange={(e) => handleChange("fasilitasDesa", e.target.value)}
               />
@@ -236,6 +334,7 @@ export default function DataKependudukanAdminPage() {
                 id="stat-aparatur"
                 type="number"
                 min="0"
+                disabled={loading}
                 value={stats.aparaturDesa}
                 onChange={(e) => handleChange("aparaturDesa", e.target.value)}
               />

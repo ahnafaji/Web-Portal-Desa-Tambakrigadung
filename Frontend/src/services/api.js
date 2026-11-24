@@ -86,6 +86,7 @@ export const api = {
   getSlider: get("/slider", mock.slider),
   getStatistik: get("/statistik", mock.statistik),
   getProfil: get("/profil", mock.profil),
+  getPerangkat: get("/perangkat", []),
   getSambutan: get("/sambutan", mock.sambutan),
   getPotensi: get("/potensi?limit=3", mock.potensi),
   getPotensiPage: get("/potensi/halaman", mock.potensiPage),

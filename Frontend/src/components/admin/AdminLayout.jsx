@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -16,6 +16,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { adminApi } from '../../services/adminApi';
 import { useAuth } from '../../context/AuthContext';
 import { AdminToastProvider } from '../../context/AdminToastContext';
 import '../../styles/admin.css';
@@ -37,7 +38,7 @@ const NAV_GROUPS = [
   {
     label: 'LAYANAN & DATA',
     items: [
-      { to: '/admin/pengaduan', label: 'Pengaduan Warga', icon: Megaphone, badge: 4 },
+      { to: '/admin/pengaduan', label: 'Pengaduan Warga', icon: Megaphone },
       { to: '/admin/apbd', label: 'APBD Desa', icon: Wallet },
       { to: '/admin/kependudukan', label: 'Data Kependudukan', icon: Users },
       { to: '/admin/profil', label: 'Profil & Perangkat', icon: UserCog },
@@ -59,9 +60,37 @@ const PAGE_TITLES = {
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingPengaduan, setPendingPengaduan] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const auth = useAuth();
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchPendingCount = () => {
+      adminApi
+        .getPengaduan()
+        .then((res) => {
+          if (!active) return;
+          const list = Array.isArray(res) ? res : Array.isArray(res?.items) ? res.items : [];
+          const count = list.filter((i) =>
+            ['menunggu', 'pending'].includes(String(i.status || '').toLowerCase())
+          ).length;
+          setPendingPengaduan(count);
+        })
+        .catch(() => {
+          if (active) setPendingPengaduan(0);
+        });
+    };
+
+    fetchPendingCount();
+    window.addEventListener('pengaduan:updated', fetchPendingCount);
+    return () => {
+      active = false;
+      window.removeEventListener('pengaduan:updated', fetchPendingCount);
+    };
+  }, [location.pathname]);
 
   const currentTitle =
     PAGE_TITLES[location.pathname] ||
@@ -117,6 +146,8 @@ export default function AdminLayout() {
                 <p className="admin-nav-label">{group.label}</p>
                 {group.items.map((item) => {
                   const Icon = item.icon;
+                  const badgeCount =
+                    item.to === '/admin/pengaduan' ? pendingPengaduan : item.badge;
                   return (
                     <NavLink
                       key={item.to}
@@ -128,8 +159,8 @@ export default function AdminLayout() {
                     >
                       <Icon size={17} />
                       <span>{item.label}</span>
-                      {item.badge ? (
-                        <span className="admin-nav-badge">{item.badge}</span>
+                      {badgeCount > 0 ? (
+                        <span className="admin-nav-badge">{badgeCount}</span>
                       ) : null}
                     </NavLink>
                   );

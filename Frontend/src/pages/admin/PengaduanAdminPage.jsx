@@ -97,6 +97,7 @@ export default function PengaduanAdminPage() {
         prev.map((item) => (item.id === selected.id ? { ...item, status: draftStatus } : item))
       );
       setSelected((prev) => (prev ? { ...prev, status: draftStatus } : null));
+      window.dispatchEvent(new Event('pengaduan:updated')); // <-- di sini
       toast.success(
         `Status tiket #${selected.id} berhasil diubah menjadi "${draftStatus}".`,
         'Status Diperbarui'
@@ -130,6 +131,7 @@ export default function PengaduanAdminPage() {
       setItems((prev) => prev.filter((i) => i.id !== targetId));
       if (selected?.id === targetId) setSelected(null);
       setDeleteTarget(null);
+      window.dispatchEvent(new Event('pengaduan:updated')); // <-- dan di sini
       toast.success(`Laporan "${targetSubjek}" berhasil dihapus.`, 'Pengaduan Dihapus');
     } catch (err) {
       setDeleteError(err.message || 'Gagal menghapus laporan pengaduan.');
@@ -293,10 +295,10 @@ export default function PengaduanAdminPage() {
                     <td>
                       <span
                         className={`admin-pill ${item.status === 'Menunggu'
-                            ? 'is-warning-soft'
-                            : item.status === 'Diproses'
-                              ? 'is-info-soft'
-                              : 'is-success-soft'
+                          ? 'is-warning-soft'
+                          : item.status === 'Diproses'
+                            ? 'is-info-soft'
+                            : 'is-success-soft'
                           }`}
                       >
                         • {item.status}
